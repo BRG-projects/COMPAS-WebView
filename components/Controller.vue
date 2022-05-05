@@ -25,7 +25,7 @@
               label="Examples"
               v-model="fileExample"
               :items="[
-                '/DamagedHelmet.gltf',
+                'DamagedHelmet.gltf',
                 'DragonAttenuation.glb',
                 'InterpolationTest.glb',
               ]"
@@ -128,7 +128,7 @@ export default {
       fileSource: "Examples",
       fileLoading: false,
       showAnimation: false,
-      fileExample: "/DamagedHelmet.gltf",
+      fileExample: "DamagedHelmet.gltf",
       fileInput: null,
       fileURL: "",
       showScene: false,
@@ -156,6 +156,8 @@ export default {
       }
       if (this.fileSource === "Examples") {
         file = this.fileExample;
+        if (!window.location.host.includes("localhost"))
+          file = "/GLTF_viwer/" + file
       }
 
       this.fileLoading = true;
