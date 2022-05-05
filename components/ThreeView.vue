@@ -9,6 +9,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
+import { mapMutations } from "vuex";
 
 export default {
   name: "ThreeView",
@@ -71,6 +72,8 @@ export default {
       this.scene.environment = texture;
     });
 
+    window.scene = this.scene;
+
     this.animate();
   },
 
@@ -88,6 +91,8 @@ export default {
       this.camera.aspect = width / height;
       this.camera.updateProjectionMatrix();
     },
+
+    ...mapMutations(["setScene"]),
   },
 };
 </script>
