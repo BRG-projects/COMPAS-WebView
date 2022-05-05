@@ -1,6 +1,6 @@
 export const state = () => {
     return {
-        showController: false,
+        showController: true,
         scene: null,
     }
 }

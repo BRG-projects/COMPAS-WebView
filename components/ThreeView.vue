@@ -28,7 +28,6 @@ export default {
     });
     const light = new THREE.DirectionalLight("hsl(0, 100%, 100%)");
     const axes = new THREE.AxesHelper(5);
-
     return {
       scene: scene,
       camera: camera,
@@ -36,6 +35,7 @@ export default {
       renderer: renderer,
       light: light,
       axes: axes,
+      clock: new THREE.Clock(),
       speed: 0.01,
     };
   },
@@ -61,10 +61,7 @@ export default {
     this.controls.staticMoving = true;
     this.controls.dynamicDampingFactor = 0.3;
 
-    const loader = new GLTFLoader().setPath("/");
-    loader.load("DamagedHelmet.gltf", (gltf) => {
-      this.scene.add(gltf.scene);
-    });
+    window.loader = new GLTFLoader();
 
     new RGBELoader().setPath("/").load("studio_small_08_4k.hdr", (texture) => {
       texture.mapping = THREE.EquirectangularReflectionMapping;
@@ -82,6 +79,9 @@ export default {
       requestAnimationFrame(this.animate);
       this.renderer.render(this.scene, this.camera);
       this.controls.update();
+      if (window.mixer) {
+        window.mixer.update(this.clock.getDelta());
+      }
     },
 
     updateDimensions() {
