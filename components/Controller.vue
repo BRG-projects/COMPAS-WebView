@@ -157,7 +157,7 @@ export default {
       if (this.fileSource === "Examples") {
         file = this.fileExample;
         if (!window.location.host.includes("localhost"))
-          file = "/GLTF_viwer/" + file
+          file = "/GLTF_viewer/" + file
       }
 
       this.fileLoading = true;
