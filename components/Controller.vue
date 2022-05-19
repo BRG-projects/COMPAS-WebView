@@ -41,12 +41,16 @@
                 <v-text-field label="Repo" v-model="repoName"></v-text-field>
                 <v-text-field label="PAT" v-model="pat"></v-text-field>
                 <v-text-field label="Folder" v-model="folder"></v-text-field>
-                <v-select label="Version" :items="tagNames"></v-select>
-                <v-select label="File" v-model="file" :items="fileNames"></v-select>
-                <v-row>
-                  <v-btn @click="fetch">Fetch</v-btn>
-                  <v-btn @click="test">Test</v-btn>
-                </v-row>
+                <v-select
+                  label="Version"
+                  v-model="tag"
+                  :items="tagNames"
+                ></v-select>
+                <v-select
+                  label="File"
+                  v-model="file"
+                  :items="fileNames"
+                ></v-select>
               </v-col>
             </v-row>
           </v-list-item-content>
@@ -125,7 +129,6 @@
 <script>
 import { mapState, mapActions } from "vuex";
 import * as THREE from "three";
-import axios from "axios";
 
 export default {
   name: "Controller",
@@ -156,53 +159,69 @@ export default {
       repoName: "Phoenix",
       pat: "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",
       folder: "data",
+      tag: "",
       file: "",
     };
   },
   methods: {
     async load() {
-      let file;
-      if (this.fileSource === "URL") {
-        file = this.fileURL;
-      }
-      if (this.fileSource === "Local") {
-        const toBase64 = (file) =>
-          new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = (error) => reject(error);
+      try {
+        let file;
+        if (this.fileSource === "URL") {
+          file = this.fileURL;
+        }
+        if (this.fileSource === "Local") {
+          const toBase64 = (file) =>
+            new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.readAsDataURL(file);
+              reader.onload = () => resolve(reader.result);
+              reader.onerror = (error) => reject(error);
+            });
+
+          file = await toBase64(this.fileInput);
+        }
+        if (this.fileSource === "Examples") {
+          file = this.fileExample;
+          if (!window.location.host.includes("localhost"))
+            file = "/GLTF_viewer/" + file;
+        }
+
+        this.fileLoading = true;
+
+        let load_gltf = (gltf) => {
+          window.scene.add(gltf.scene);
+
+          window.mixer = new THREE.AnimationMixer(gltf.scene);
+          this.animations = gltf.animations.map((anime) => {
+            return {
+              name: anime.name,
+              action: mixer.clipAction(anime),
+            };
           });
 
-        file = await toBase64(this.fileInput);
-      }
-      if (this.fileSource === "Examples") {
-        file = this.fileExample;
-        if (!window.location.host.includes("localhost"))
-          file = "/GLTF_viewer/" + file;
-      }
+          console.log(gltf);
+          this.fileLoading = false;
+          this.refresh();
+        };
 
-      this.fileLoading = true;
+        if (this.fileSource === "Repo") {
+          let content = await this.getFile({
+            owner: this.repoOwner,
+            repo: this.repoName,
+            pat: this.pat,
+            path: this.folder + "/" + this.file,
+          });
 
-      window.loader.load(file, (gltf) => {
-        if (window.gltl_scene) {
-          window.scene.remove(window.gltl_scene);
+          window.loader.parse(content, "/", load_gltf);
+        } else {
+          window.loader.load(file, load_gltf);
         }
-        window.gltl_scene = gltf.scene;
-        window.scene.add(window.gltl_scene);
-
-        window.mixer = new THREE.AnimationMixer(gltf.scene);
-        this.animations = gltf.animations.map((anime) => {
-          return {
-            name: anime.name,
-            action: mixer.clipAction(anime),
-          };
-        });
-
-        console.log(gltf);
+      } catch (e) {
+        console.log(e);
         this.fileLoading = false;
-        this.refresh();
-      });
+        alert(e);
+      }
     },
 
     refresh() {
@@ -233,36 +252,9 @@ export default {
         pat: this.pat,
         path: this.folder,
       });
+
+      this.tag = this.tagNames[0];
     },
-
-    async test(){
-      let content = await this.getFile({
-        owner: this.repoOwner,
-        repo: this.repoName,
-        pat: this.pat,
-        path: this.folder + "/" + this.file,
-      });
-      console.log(content);
-      
-      // window.loader.parse(content, (gltf) => {console.log(gltf)});
-
-      // window.loader.setRequestHeader({Authorization: "token " + this.pat, Accept: "application/vnd.github.v3.raw"});
-      // window.loader.setWithCredentials(true);
-      // window.loader.load("https://api.github.com/repos/BlockResearchGroup/Phoenix/contents/data/blocks.gltf", (gltf) => {console.log(gltf)});
-
-      // axios.get("https://api.github.com/repos/BlockResearchGroup/Phoenix/contents/data/blocks.gltf", {
-      //   headers: {
-      //     Authorization: "token " + this.pat,
-      //     Accept: "application/vnd.github.v3.raw",
-      //   },
-      //   withCredentials: true,
-      // }).then((res) => {
-      //   console.log(res);
-      // });
-
-
-    },
-
     ...mapActions("repo", ["getTags", "getFiles", "getFile"]),
   },
   watch: {
@@ -276,6 +268,12 @@ export default {
         }
       });
     },
+  },
+
+  async mounted() {
+    if (this.repoName && this.repoOwner && this.pat) {
+      await this.fetch();
+    }
   },
 };
 </script>
