@@ -69,8 +69,8 @@ export default {
     else hdri = "/GLTF_viewer/studio_small_08_4k.hdr";
     new RGBELoader().load(hdri, (texture) => {
       texture.mapping = THREE.EquirectangularReflectionMapping;
-      this.scene.background = texture;
       this.scene.environment = texture;
+      window.hdri = texture;
     });
 
     window.scene = this.scene;
