@@ -157,7 +157,7 @@ export default {
       sceneSelection: [],
       repoOwner: "BlockResearchGroup",
       repoName: "Phoenix",
-      pat: "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",
+      pat: null,
       folder: "data",
       tag: "",
       file: "",
@@ -267,6 +267,10 @@ export default {
           child.visible = false;
         }
       });
+    },
+
+    pat() {
+      this.fetch();
     },
   },
 
