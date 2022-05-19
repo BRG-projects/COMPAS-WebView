@@ -35,11 +35,20 @@
 
         <v-list-item v-if="fileSource === 'Repo'">
           <v-list-item-content>
-            <v-text-field label="Repo Adress"></v-text-field>
-            <v-select
-              label="Version"
-              :items="['0.0.1', '0.5.0', '1.0.0']"
-            ></v-select>
+            <v-row>
+              <v-col>
+                <v-text-field label="Owner" v-model="repoOwner"></v-text-field>
+                <v-text-field label="Repo" v-model="repoName"></v-text-field>
+                <v-text-field label="PAT" v-model="pat"></v-text-field>
+                <v-text-field label="Folder" v-model="folder"></v-text-field>
+                <v-select label="Version" :items="tagNames"></v-select>
+                <v-select label="File" v-model="file" :items="fileNames"></v-select>
+                <v-row>
+                  <v-btn @click="fetch">Fetch</v-btn>
+                  <v-btn @click="test">Test</v-btn>
+                </v-row>
+              </v-col>
+            </v-row>
           </v-list-item-content>
         </v-list-item>
 
@@ -114,13 +123,21 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
+import { mapState, mapActions } from "vuex";
 import * as THREE from "three";
+import axios from "axios";
 
 export default {
   name: "Controller",
   computed: {
     ...mapState(["showController"]),
+    ...mapState("repo", ["tags", "files"]),
+    tagNames() {
+      return this.tags.map((tag) => tag.name);
+    },
+    fileNames() {
+      return this.files.map((file) => file.name);
+    },
   },
   data() {
     return {
@@ -135,6 +152,11 @@ export default {
       scene: [],
       animations: [],
       sceneSelection: [],
+      repoOwner: "BlockResearchGroup",
+      repoName: "Phoenix",
+      pat: "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",
+      folder: "data",
+      file: "",
     };
   },
   methods: {
@@ -157,7 +179,7 @@ export default {
       if (this.fileSource === "Examples") {
         file = this.fileExample;
         if (!window.location.host.includes("localhost"))
-          file = "/GLTF_viewer/" + file
+          file = "/GLTF_viewer/" + file;
       }
 
       this.fileLoading = true;
@@ -197,6 +219,51 @@ export default {
       };
       this.scene = getChildren(window.scene);
     },
+
+    async fetch() {
+      await this.getTags({
+        owner: this.repoOwner,
+        repo: this.repoName,
+        pat: this.pat,
+      });
+
+      await this.getFiles({
+        owner: this.repoOwner,
+        repo: this.repoName,
+        pat: this.pat,
+        path: this.folder,
+      });
+    },
+
+    async test(){
+      let content = await this.getFile({
+        owner: this.repoOwner,
+        repo: this.repoName,
+        pat: this.pat,
+        path: this.folder + "/" + this.file,
+      });
+      console.log(content);
+      
+      // window.loader.parse(content, (gltf) => {console.log(gltf)});
+
+      // window.loader.setRequestHeader({Authorization: "token " + this.pat, Accept: "application/vnd.github.v3.raw"});
+      // window.loader.setWithCredentials(true);
+      // window.loader.load("https://api.github.com/repos/BlockResearchGroup/Phoenix/contents/data/blocks.gltf", (gltf) => {console.log(gltf)});
+
+      // axios.get("https://api.github.com/repos/BlockResearchGroup/Phoenix/contents/data/blocks.gltf", {
+      //   headers: {
+      //     Authorization: "token " + this.pat,
+      //     Accept: "application/vnd.github.v3.raw",
+      //   },
+      //   withCredentials: true,
+      // }).then((res) => {
+      //   console.log(res);
+      // });
+
+
+    },
+
+    ...mapActions("repo", ["getTags", "getFiles", "getFile"]),
   },
   watch: {
     sceneSelection(selection) {
