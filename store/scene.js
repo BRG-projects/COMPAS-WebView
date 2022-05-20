@@ -19,7 +19,8 @@ export const actions = {
             return parent.children.map((child) => {
                 // this.sceneSelection.push(child.id);
                 return {
-                    name: `<${child.constructor.name}>${child.name}`,
+                    name: `<${child.type}>${child.name}`,
+                    selected: false,
                     id: child.id,
                     children: getChildren(child),
                 };

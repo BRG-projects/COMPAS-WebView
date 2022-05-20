@@ -31,24 +31,24 @@ export const actions = {
         console.log(tags)
     },
 
-    async getFiles({ commit }, { owner, repo, pat, path }) {
+    async getFiles({ commit }, { owner, repo, pat, path, ref }) {
 
         const octokit = new Octokit({
             auth: pat
         })
 
-        let files = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', { owner, repo, path })
+        let files = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', { owner, repo, path, ref })
         commit('setFiles', files.data)
         console.log(files)
     },
 
-    async getFile({ commit }, { owner, repo, pat, path }) {
+    async getFile({ commit }, { owner, repo, pat, path, ref }) {
 
         const octokit = new Octokit({
             auth: pat
         })
 
-        let file = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', { owner, repo, path })
+        let file = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', { owner, repo, path, ref })
         console.log(file)
         return Buffer.from(file.data.content, 'base64').toString('utf8')
     }

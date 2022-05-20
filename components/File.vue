@@ -32,13 +32,23 @@
             <v-text-field label="Owner" v-model="repoOwner"></v-text-field>
             <v-text-field label="Repo" v-model="repoName"></v-text-field>
             <v-text-field label="PAT" v-model="pat"></v-text-field>
-            <v-text-field label="Folder" v-model="folder"></v-text-field>
+            <v-text-field
+              label="Folder"
+              v-if="pat"
+              v-model="folder"
+            ></v-text-field>
             <v-select
+              v-if="pat"
               label="Version"
               v-model="tag"
               :items="tagNames"
             ></v-select>
-            <v-select label="File" v-model="file" :items="fileNames"></v-select>
+            <v-select
+              v-if="tag"
+              label="File"
+              v-model="file"
+              :items="fileNames"
+            ></v-select>
           </v-col>
         </v-row>
       </v-list-item-content>
@@ -151,6 +161,7 @@ export default {
             repo: this.repoName,
             pat: this.pat,
             path: this.folder + "/" + this.file,
+            ref: this.tag,
           });
 
           window.loader.parse(content, "/", load_gltf);
@@ -171,19 +182,22 @@ export default {
         pat: this.pat,
       });
 
-      await this.getFiles({
-        owner: this.repoOwner,
-        repo: this.repoName,
-        pat: this.pat,
-        path: this.folder,
-      });
-
-      this.tag = this.tagNames[0];
+      // this.tag = this.tagNames[0];
     },
   },
   watch: {
     pat() {
       this.fetch();
+    },
+
+    async tag() {
+      await this.getFiles({
+        owner: this.repoOwner,
+        repo: this.repoName,
+        pat: this.pat,
+        path: this.folder,
+        ref: this.tag,
+      });
     },
   },
 

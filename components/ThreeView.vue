@@ -6,10 +6,13 @@
 
 <script>
 import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+// import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 import { mapMutations } from "vuex";
+import CameraControls from "camera-controls";
+
+CameraControls.install({ THREE: THREE });
 
 export default {
   name: "ThreeView",
@@ -28,6 +31,7 @@ export default {
     });
     const light = new THREE.DirectionalLight("hsl(0, 100%, 100%)");
     const axes = new THREE.AxesHelper(5);
+    // camera.up.set(0, 0, 1);
     return {
       scene: scene,
       camera: camera,
@@ -36,30 +40,26 @@ export default {
       light: light,
       axes: axes,
       clock: new THREE.Clock(),
+      group: new THREE.Group(),
       speed: 0.01,
     };
   },
   created: function () {
-    this.scene.add(this.camera);
-    this.scene.add(this.light);
-    this.scene.add(this.axes);
+    this.group.name = "Default";
+    this.group.add(this.camera);
+    this.group.add(this.light);
+    this.group.add(this.axes);
+    this.scene.add(this.group);
     this.light.position.set(0, 0, 10);
     this.camera.position.z = 5;
     this.scene.background = new THREE.Color("hsl(0, 100%, 100%)");
   },
   mounted: function () {
     this.$refs.canvas.appendChild(this.renderer.domElement);
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    this.controls = new CameraControls(this.camera, this.renderer.domElement);
     this.updateDimensions();
     window.addEventListener("resize", this.updateDimensions);
-
-    this.controls.rotateSpeed = 1.0;
-    this.controls.zoomSpeed = 5;
-    this.controls.panSpeed = 0.8;
-    this.controls.noZoom = false;
-    this.controls.noPan = false;
-    this.controls.staticMoving = true;
-    this.controls.dynamicDampingFactor = 0.3;
+    this.clock = new THREE.Clock();
 
     window.loader = new GLTFLoader();
 
@@ -74,15 +74,40 @@ export default {
     });
 
     window.scene = this.scene;
+    window.camera = this.camera;
+    window.controls = this.controls;
+
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+
+    function onMouseMove(event) {
+      pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+      pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    }
+
+    function onMouseDown(event){
+      raycaster.setFromCamera(pointer, camera);
+      const intersects = raycaster.intersectObjects(window.scene.children);
+      if (intersects.length > 0) {
+        const obj = intersects[0].object;
+        console.log(obj)
+      }
+    }
+
+    window.addEventListener( 'mousemove', onMouseMove );
+    window.addEventListener( 'mousedown', onMouseDown );
 
     this.animate();
   },
 
   methods: {
     animate: function () {
+      const delta = this.clock.getDelta();
+      this.controls.update(delta);
+
       requestAnimationFrame(this.animate);
       this.renderer.render(this.scene, this.camera);
-      this.controls.update();
+      // this.controls.update();
       if (window.mixer) {
         window.mixer.update(this.clock.getDelta());
       }
