@@ -6,62 +6,69 @@
 
 <script>
 import * as THREE from "three";
-// import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
-import { mapMutations } from "vuex";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { OutlinePass } from "three/examples/jsm/postprocessing/OutlinePass.js";
 import CameraControls from "camera-controls";
 
-CameraControls.install({ THREE: THREE });
+CameraControls.install({ THREE });
 
-export default {
-  name: "ThreeView",
-  data: function () {
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(
+class Three {
+  constructor() {
+    this.scene = new THREE.Scene();
+    this.camera = new THREE.PerspectiveCamera(
       75,
       window.innerWidth / window.innerHeight,
       0.1,
       1000
     );
-    const renderer = new THREE.WebGLRenderer({
-      antialias: true,
-      width: 500,
-      height: window.innerHeight,
-    });
-    const light = new THREE.DirectionalLight("hsl(0, 100%, 100%)");
-    const axes = new THREE.AxesHelper(5);
-    // camera.up.set(0, 0, 1);
-    return {
-      scene: scene,
-      camera: camera,
-      controls: [],
-      renderer: renderer,
-      light: light,
-      axes: axes,
-      clock: new THREE.Clock(),
-      group: new THREE.Group(),
-      speed: 0.01,
-    };
-  },
-  created: function () {
+    this.controls = null;
+    this.renderer = new THREE.WebGLRenderer({ antialias: true });
+    this.light = new THREE.DirectionalLight("hsl(0, 100%, 100%)");
+    this.axes = new THREE.AxesHelper(5);
+    this.clock = new THREE.Clock();
+    this.group = new THREE.Group();
+    this.gltfGroup = new THREE.Group();
+    this.loader = new GLTFLoader();
+    this.clock = new THREE.Clock();
+    this.mixer = null;
+    this.hdri = null;
+    this.selected = null;
+  }
+
+  setup(refs) {
+    this.refs = refs;
     this.group.name = "Default";
+    this.light.position.set(0, 0, 10);
+    this.camera.position.z = 5;
     this.group.add(this.camera);
     this.group.add(this.light);
     this.group.add(this.axes);
     this.scene.add(this.group);
-    this.light.position.set(0, 0, 10);
-    this.camera.position.z = 5;
-    this.scene.background = new THREE.Color("hsl(0, 100%, 100%)");
-  },
-  mounted: function () {
-    this.$refs.canvas.appendChild(this.renderer.domElement);
+
+    this.gltfGroup.name = "GLTFs";
+    this.scene.add(this.gltfGroup);
+
+    this.scene.background = new THREE.Color(0x1e1e1e);
+    this.refs.canvas.appendChild(this.renderer.domElement);
     this.controls = new CameraControls(this.camera, this.renderer.domElement);
+
+    this.composer = new EffectComposer(this.renderer);
+
+    const renderPass = new RenderPass(this.scene, this.camera);
+    this.composer.addPass(renderPass);
+
+    this.outlinePass = new OutlinePass(
+      new THREE.Vector2(window.innerWidth, window.innerHeight),
+      this.scene,
+      this.camera
+    );
+    this.composer.addPass(this.outlinePass);
+
     this.updateDimensions();
     window.addEventListener("resize", this.updateDimensions);
-    this.clock = new THREE.Clock();
-
-    window.loader = new GLTFLoader();
 
     let hdri;
     if (window.location.host.includes("localhost"))
@@ -70,12 +77,8 @@ export default {
     new RGBELoader().load(hdri, (texture) => {
       texture.mapping = THREE.EquirectangularReflectionMapping;
       this.scene.environment = texture;
-      window.hdri = texture;
+      this.hdri = texture;
     });
-
-    window.scene = this.scene;
-    window.camera = this.camera;
-    window.controls = this.controls;
 
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
@@ -85,43 +88,71 @@ export default {
       pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
     }
 
-    function onMouseDown(event){
-      raycaster.setFromCamera(pointer, camera);
-      const intersects = raycaster.intersectObjects(window.scene.children);
+    function onMouseDown(event) {
+      raycaster.setFromCamera(pointer, window.three.camera);
+      const intersects = raycaster.intersectObjects(
+        window.three.gltfGroup.children
+      );
       if (intersects.length > 0) {
         const obj = intersects[0].object;
-        console.log(obj)
+        window.three.select(obj);
+      } else {
+        window.three.select();
       }
     }
 
-    window.addEventListener( 'mousemove', onMouseMove );
-    window.addEventListener( 'mousedown', onMouseDown );
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("dblclick", onMouseDown);
+  }
 
-    this.animate();
-  },
+  select(obj) {
+    console.log("select", obj);
+    if (obj) {
+      this.selected = obj;
+      this.outlinePass.selectedObjects = [obj];
+    } else {
+      this.selected = null;
+      this.outlinePass.selectedObjects = [];
+    }
+  }
 
-  methods: {
-    animate: function () {
+  start() {
+    let animate = () => {
       const delta = this.clock.getDelta();
       this.controls.update(delta);
 
-      requestAnimationFrame(this.animate);
-      this.renderer.render(this.scene, this.camera);
-      // this.controls.update();
-      if (window.mixer) {
-        window.mixer.update(this.clock.getDelta());
+      requestAnimationFrame(animate);
+      // this.renderer.render(this.scene, this.camera);
+      this.composer.render();
+      if (this.mixer) {
+        this.mixer.update(delta);
       }
-    },
+    };
 
-    updateDimensions() {
-      let width = this.$refs.container.clientWidth;
-      let height = this.$refs.container.clientHeight;
-      this.renderer.setSize(width, height);
-      this.camera.aspect = width / height;
-      this.camera.updateProjectionMatrix();
-    },
+    animate();
+  }
 
-    ...mapMutations(["setScene"]),
+  updateDimensions() {
+    let width = window.three.refs.container.clientWidth;
+    let height = window.three.refs.container.clientHeight;
+    window.three.renderer.setSize(width, height);
+    window.three.composer.setSize(width, height);
+    window.three.camera.aspect = width / height;
+    window.three.camera.updateProjectionMatrix();
+  }
+}
+
+export default {
+  name: "ThreeView",
+  data: function () {
+    return {
+      three: new Three(),
+    };
+  },
+  mounted: function () {
+    window.three = this.three;
+    this.three.setup(this.$refs);
+    this.three.start();
   },
 };
 </script>

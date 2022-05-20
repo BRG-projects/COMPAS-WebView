@@ -19,9 +19,9 @@ export const actions = {
             return parent.children.map((child) => {
                 // this.sceneSelection.push(child.id);
                 return {
-                    name: `<${child.type}>${child.name}`,
-                    selected: false,
+                    name: child.name ? child.name:`(${child.type})`,
                     id: child.id,
+                    type: child.type,
                     children: getChildren(child),
                 };
             });
@@ -30,5 +30,7 @@ export const actions = {
         let tree = getChildren(scene);
 
         commit('setTree', tree);
-    }
+    },
+
+
 }

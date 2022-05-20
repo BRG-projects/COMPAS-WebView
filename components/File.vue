@@ -80,7 +80,7 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
-import * as THREE from "three";
+import { AnimationMixer } from "three";
 
 export default {
   name: "File",
@@ -140,10 +140,13 @@ export default {
         this.fileLoading = true;
 
         let load_gltf = (gltf) => {
-          window.scene.add(gltf.scene);
 
-          window.mixer = new THREE.AnimationMixer(gltf.scene);
-          window.animations = gltf.animations.map((anime) => {
+          let three = window.three
+
+          three.gltfGroup.add(gltf.scene);
+
+          three.mixer = new AnimationMixer(gltf.scene);
+          three.animations = gltf.animations.map((anime) => {
             return {
               name: anime.name,
               action: mixer.clipAction(anime),
@@ -152,7 +155,7 @@ export default {
 
           console.log(gltf);
           this.fileLoading = false;
-          this.refreshTree(window.scene);
+          this.refreshTree(three.scene);
         };
 
         if (this.fileSource === "Repo") {
@@ -164,9 +167,9 @@ export default {
             ref: this.tag,
           });
 
-          window.loader.parse(content, "/", load_gltf);
+          three.loader.parse(content, "/", load_gltf);
         } else {
-          window.loader.load(file, load_gltf);
+          three.loader.load(file, load_gltf);
         }
       } catch (e) {
         console.log(e);
