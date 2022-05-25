@@ -23,14 +23,16 @@
       <v-list-item-content>
         <v-card>
           <v-card-title>Scene</v-card-title>
-          <v-treeview :items="tree" hoverable selected-color="green">
+          <v-treeview :items="tree" hoverable activatable :active="selected" selected-color="green" @update:active="select">
             <template v-slot:prepend="{ item }">
-              <v-icon @click="select(item)">
+              <v-icon>
                 {{ icons[item.type] }}
               </v-icon>
             </template>
             <template v-slot:label="{ item }">
-              <span> {{ item.name }} </span>
+              <span class="pointer">
+                {{ item.name }}
+              </span>
             </template>
             <template v-slot:append="{ item }">
               <v-icon v-if="getColor(item)" @click="changeColor(item)">
@@ -70,13 +72,27 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
 import * as THREE from "three";
 
 export default {
   name: "Scene",
+
   computed: {
-    ...mapState("scene", ["tree"]),
+    tree() {
+      if (!window.three) return [];
+      let getChildren = (parent) => {
+        return parent.children.map((child) => {
+          return {
+            name: child.name ? child.name : `(${child.type})`,
+            id: child.id,
+            type: child.type,
+            children: getChildren(child),
+          };
+        });
+      };
+      return getChildren(window.three.scene);
+    },
+
   },
 
   data() {
@@ -96,6 +112,7 @@ export default {
         GridHelper: "mdi-axis",
       },
       backgroundColor: 0x1e1e1e,
+      selected: [],
     };
   },
 
@@ -116,8 +133,6 @@ export default {
   },
 
   methods: {
-    ...mapActions("scene", ["refreshTree"]),
-
     show(item) {
       let obj = this.getObject(item.id);
       obj.visible = !obj.visible;
@@ -127,7 +142,6 @@ export default {
       if (window.confirm(`Are you sure you want to delete ${item.name}?`)) {
         let obj = this.getObject(item.id);
         obj.parent.remove(obj);
-        this.refreshTree(window.three.scene);
       }
     },
 
@@ -142,11 +156,16 @@ export default {
       return obj;
     },
 
-    select(item) {
-      console.log(item);
-      let obj = this.getObject(item.id);
-      console.log(obj);
+    select(ids) {
+      if (ids.length === 0) return;
+      let obj = this.getObject(ids[0]);
       window.three.select(obj);
+      console.log(obj);
+    },
+
+    isSelected(item) {
+      let obj = this.getObject(item.id);
+      return window.three.selected === obj;
     },
 
     getColor(item) {
@@ -203,3 +222,9 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.pointer {
+  cursor: pointer;
+}
+</style>

@@ -108,6 +108,7 @@ class Three {
     console.log("select", obj);
     if (obj) {
       this.selected = obj;
+      obj.selected = true;
       this.outlinePass.selectedObjects = [obj];
     } else {
       this.selected = null;

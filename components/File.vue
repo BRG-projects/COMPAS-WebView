@@ -81,7 +81,6 @@
 <script>
 import { mapState, mapActions } from "vuex";
 import { AnimationMixer } from "three";
-import * as THREE from "three";
 
 export default {
   name: "File",
@@ -105,7 +104,7 @@ export default {
       animations: [],
       repoOwner: "BlockResearchGroup",
       repoName: "Phoenix",
-      pat: "",
+      pat: localStorage.getItem("pat"),
       folder: "data",
       tag: "",
       file: "",
@@ -113,7 +112,6 @@ export default {
   },
   methods: {
     ...mapActions("repo", ["getTags", "getFiles", "getFile"]),
-    ...mapActions("scene", ["refreshTree"]),
 
     async load() {
       try {
@@ -161,9 +159,7 @@ export default {
           //   }
           // });
 
-
           this.fileLoading = false;
-          this.refreshTree(three.scene);
         };
 
         if (this.fileSource === "Repo") {
@@ -197,7 +193,8 @@ export default {
     },
   },
   watch: {
-    pat() {
+    pat(pat) {
+      localStorage.setItem("pat", pat);
       this.fetch();
     },
 
@@ -214,7 +211,7 @@ export default {
 
   async mounted() {
     if (this.repoName && this.repoOwner && this.pat) {
-      await this.fetch();
+      this.fetch();
     }
   },
 };
