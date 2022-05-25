@@ -1,14 +1,18 @@
 <template>
   <v-list>
-    <v-list-item>
+    <!-- <v-list-item>
       <v-list-item-content>
         <v-switch label="HDRI" v-model="useHdri" @change="showHdri"></v-switch>
       </v-list-item-content>
-    </v-list-item>
+    </v-list-item> -->
 
     <v-list-item>
       <v-list-item-content>
-        <v-radio-group v-model="upAxis" label="Up Axis">
+        <v-radio-group v-model="backgroundColor" label="Background">
+          <v-radio label="Dark" :value="0x1e1e1e" />
+          <v-radio label="Light" :value="0xeeeeee" />
+        </v-radio-group>
+        <v-radio-group v-model="upAxis" label="Up Axis" class="ml-10">
           <v-radio label="Y" value="Y" />
           <v-radio label="Z" value="Z" />
         </v-radio-group>
@@ -35,7 +39,12 @@
               <v-icon @click="show(item)">
                 {{ getObject(item.id).visible ? "mdi-eye" : "mdi-eye-off" }}
               </v-icon>
-              <v-icon @click="remove(item)"> mdi-delete </v-icon>
+              <v-icon
+                v-if="item.name !== 'Default' && item.name !== 'GLTFs'"
+                @click="remove(item)"
+              >
+                mdi-delete
+              </v-icon>
             </template>
           </v-treeview>
         </v-card>
@@ -81,9 +90,12 @@ export default {
         Group: "mdi-folder-multiple",
         Mesh: "mdi-vector-triangle",
         PerspectiveCamera: "mdi-camera",
-        DirectionalLight: "mdi-lightbulb",
+        PointLight: "mdi-lightbulb",
+        AmbientLight: "mdi-lightbulb",
         AxesHelper: "mdi-axis",
+        GridHelper: "mdi-axis",
       },
+      backgroundColor: 0x1e1e1e,
     };
   },
 
@@ -96,6 +108,10 @@ export default {
         window.three.camera.up.set(0, 0, 1);
         window.three.controls.updateCameraUp();
       }
+    },
+
+    backgroundColor(val) {
+      window.three.scene.background.setHex(val);
     },
   },
 
@@ -126,15 +142,16 @@ export default {
       return obj;
     },
 
-    select(item){
-      console.log(item)
+    select(item) {
+      console.log(item);
       let obj = this.getObject(item.id);
-      console.log(obj)
+      console.log(obj);
       window.three.select(obj);
     },
 
     getColor(item) {
       let obj = this.getObject(item.id);
+      if (obj.color) return obj.color;
       if (obj.material) return obj.material.color;
     },
 
@@ -155,11 +172,19 @@ export default {
     confirmColor() {
       this.showColorPicker = false;
       console.log(this.color);
-      this.colorObj.material.color.setRGB(
-        this.color.rgba.r / 255,
-        this.color.rgba.g / 255,
-        this.color.rgba.b / 255
-      );
+      if (this.colorObj.color) {
+        this.colorObj.color.setRGB(
+          this.color.rgba.r / 255,
+          this.color.rgba.g / 255,
+          this.color.rgba.b / 255
+        );
+      } else {
+        this.colorObj.material.color.setRGB(
+          this.color.rgba.r / 255,
+          this.color.rgba.g / 255,
+          this.color.rgba.b / 255
+        );
+      }
     },
 
     cancelColor() {
@@ -169,8 +194,10 @@ export default {
     showHdri() {
       if (this.useHdri) {
         window.three.scene.background = window.three.hdri;
+        window.three.scene.environment = window.three.hdri;
       } else {
-        window.three.scene.background = new THREE.Color(0xffffff);
+        window.three.scene.background = new THREE.Color(0x1e1e1e);
+        window.three.scene.environment = null;
       }
     },
   },

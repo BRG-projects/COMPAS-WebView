@@ -81,6 +81,7 @@
 <script>
 import { mapState, mapActions } from "vuex";
 import { AnimationMixer } from "three";
+import * as THREE from "three";
 
 export default {
   name: "File",
@@ -104,7 +105,7 @@ export default {
       animations: [],
       repoOwner: "BlockResearchGroup",
       repoName: "Phoenix",
-      pat: null,
+      pat: "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",
       folder: "data",
       tag: "",
       file: "",
@@ -140,8 +141,7 @@ export default {
         this.fileLoading = true;
 
         let load_gltf = (gltf) => {
-
-          let three = window.three
+          let three = window.three;
 
           three.gltfGroup.add(gltf.scene);
 
@@ -154,6 +154,14 @@ export default {
           });
 
           console.log(gltf);
+          // gltf.scene.traverse(function (child) {
+          //   if (child instanceof THREE.Mesh) {
+          //     child.material.flatShading = false;
+          //     child.geometry.computeVertexNormals();
+          //   }
+          // });
+
+
           this.fileLoading = false;
           this.refreshTree(three.scene);
         };

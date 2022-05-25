@@ -11,9 +11,9 @@
       <Nuxt />
     </v-main>
     <Controller/>
-    <v-footer app>
+    <!-- <v-footer app>
       <span>&copy; {{ new Date().getFullYear() }}</span>
-    </v-footer>
+    </v-footer> -->
   </v-app>
 </template>
 
