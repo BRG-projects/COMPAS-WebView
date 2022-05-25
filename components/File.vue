@@ -105,7 +105,7 @@ export default {
       animations: [],
       repoOwner: "BlockResearchGroup",
       repoName: "Phoenix",
-      pat: "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",
+      pat: "",
       folder: "data",
       tag: "",
       file: "",
