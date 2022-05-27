@@ -42,6 +42,9 @@ class Three {
     this.selected = null;
     this.pointer = new THREE.Vector2();
     this.raycaster = new THREE.Raycaster();
+    this.edgeMaterial = new THREE.LineBasicMaterial({
+      color: 0xffffff,
+    });
   }
 
   setup(refs) {
@@ -101,7 +104,6 @@ class Three {
     //   texture.mapping = THREE.EquirectangularReflectionMapping;
     //   this.hdri = texture;
     // });
-
   }
 
   select(obj) {
@@ -156,20 +158,26 @@ export default {
   },
 
   methods: {
-    onMouseMove(event){
+    onMouseMove(event) {
       this.three.pointer.x = (event.offsetX / event.target.width) * 2 - 1;
       this.three.pointer.y = -(event.offsetY / event.target.height) * 2 + 1;
     },
-    onMouseDown(){
+    onMouseDown() {
       this.three.raycaster.setFromCamera(this.three.pointer, this.three.camera);
-      const intersects = this.three.raycaster.intersectObjects(this.three.gltfGroup.children);
+      let intersects = this.three.raycaster.intersectObjects(
+        this.three.gltfGroup.children
+      );
+      intersects = intersects.filter(
+        (intersect) => intersect.object.type === "Mesh"
+      );
       if (intersects.length > 0) {
+        console.log(intersects);
         const obj = intersects[0].object;
         this.three.select(obj);
       } else {
         this.three.select();
       }
-    }
+    },
   },
 };
 </script>

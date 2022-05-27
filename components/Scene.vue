@@ -16,6 +16,10 @@
           <v-radio label="Y" value="Y" />
           <v-radio label="Z" value="Z" />
         </v-radio-group>
+        <v-radio-group v-model="viewMode" label="View Mode" class="ml-10">
+          <v-radio label="Normal" value="Normal" />
+          <v-radio label="Ghosted" value="Ghosted" />
+        </v-radio-group>
       </v-list-item-content>
     </v-list-item>
 
@@ -23,7 +27,13 @@
       <v-list-item-content>
         <v-card>
           <v-card-title>Scene</v-card-title>
-          <v-treeview :items="tree" hoverable activatable :active="activated" @update:active="select">
+          <v-treeview
+            :items="tree"
+            hoverable
+            activatable
+            :active="activated"
+            @update:active="select"
+          >
             <template v-slot:prepend="{ item }">
               <v-icon>
                 {{ icons[item.type] }}
@@ -93,20 +103,20 @@ export default {
       return getChildren(window.three.scene);
     },
 
-    selected(){
-      if (window.three){
-        return window.three.selected
-      }else{
+    selected() {
+      if (window.three) {
+        return window.three.selected;
+      } else {
         return null;
       }
-    }
-
+    },
   },
 
   data() {
     return {
       useHdri: false,
       upAxis: "Z",
+      viewMode: "Normal",
       showColorPicker: false,
       color: null,
       colorObj: null,
@@ -139,12 +149,18 @@ export default {
       window.three.scene.background.setHex(val);
     },
 
-    selected(selected){
-      if (selected)
-        this.activated = [selected.id]
-      else
-        this.activated = []
-    }
+    selected(selected) {
+      if (selected) this.activated = [selected.id];
+      else this.activated = [];
+    },
+
+    viewMode(val) {
+      if (val === "Normal") {
+        window.three.edgeMaterial.depthTest = true;
+      } else if (val === "Ghosted") {
+        window.three.edgeMaterial.depthTest = false;
+      }
+    },
   },
 
   methods: {
