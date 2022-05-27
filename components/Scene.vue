@@ -23,7 +23,7 @@
       <v-list-item-content>
         <v-card>
           <v-card-title>Scene</v-card-title>
-          <v-treeview :items="tree" hoverable activatable :active="selected" selected-color="green" @update:active="select">
+          <v-treeview :items="tree" hoverable activatable :active="activated" @update:active="select">
             <template v-slot:prepend="{ item }">
               <v-icon>
                 {{ icons[item.type] }}
@@ -93,12 +93,20 @@ export default {
       return getChildren(window.three.scene);
     },
 
+    selected(){
+      if (window.three){
+        return window.three.selected
+      }else{
+        return null;
+      }
+    }
+
   },
 
   data() {
     return {
       useHdri: false,
-      upAxis: "Y",
+      upAxis: "Z",
       showColorPicker: false,
       color: null,
       colorObj: null,
@@ -112,7 +120,7 @@ export default {
         GridHelper: "mdi-axis",
       },
       backgroundColor: 0x1e1e1e,
-      selected: [],
+      activated: [],
     };
   },
 
@@ -130,6 +138,13 @@ export default {
     backgroundColor(val) {
       window.three.scene.background.setHex(val);
     },
+
+    selected(selected){
+      if (selected)
+        this.activated = [selected.id]
+      else
+        this.activated = []
+    }
   },
 
   methods: {
@@ -156,11 +171,11 @@ export default {
       return obj;
     },
 
-    select(ids) {
-      if (ids.length === 0) return;
-      let obj = this.getObject(ids[0]);
+    select(activated) {
+      if (activated.length === 0) return;
+      if (this.selected && this.selected.id === activated[0]) return;
+      let obj = this.getObject(activated[0]);
       window.three.select(obj);
-      console.log(obj);
     },
 
     isSelected(item) {
