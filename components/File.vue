@@ -155,15 +155,17 @@ export default {
           gltf.scene.traverse(function (child) {
             if (child instanceof Mesh) {
               child.geometry.autoCreaseDetect = autoCreaseDetect;
-              let angle = 30
+              let angle = 30;
               let geometry = child.geometry.autoCreaseDetect(angle);
-              child.material.flatShading = false;
-              child._geometry = child.geometry;
-              child.geometry = geometry;
-              const edges = new EdgesGeometry(geometry, angle);
-              const line = new LineSegments(edges, three.edgeMaterial);
-              line.renderOrder = 1;
-              child.add(line);
+              if (geometry) {
+                child.material.flatShading = false;
+                child._geometry = child.geometry;
+                child.geometry = geometry;
+                const edges = new EdgesGeometry(geometry, angle);
+                const line = new LineSegments(edges, three.edgeMaterial);
+                line.renderOrder = 1;
+                child.add(line);
+              }
             }
           });
 

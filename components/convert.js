@@ -8,10 +8,13 @@ function calcNormal(normals, normal, angle) {
 
 export default function (angle) {
 
+    if (this.getAttribute("normal")) return;
+
     angle = angle || 15;
 
     const index = this.index;
     const positionAttribute = this.getAttribute("position");
+
 
     let pA = new THREE.Vector3(),
         pB = new THREE.Vector3(),
