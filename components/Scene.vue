@@ -47,11 +47,11 @@
               </span>
             </template>
             <template v-slot:append="{ item }">
-              <v-icon v-if="getColor(item)" @click="changeColor(item)">
+              <!-- <v-icon v-if="getColor(item)" @click="changeColor(item)">
                 mdi-palette
-              </v-icon>
-              <v-icon @click="show(item)">
-                {{ getObject(item.id).visible ? "mdi-eye" : "mdi-eye-off" }}
+              </v-icon> -->
+              <v-icon @click="toggleVisibility(item)">
+                {{ item.visible ? "mdi-eye" : "mdi-eye-off" }}
               </v-icon>
               <v-icon
                 v-if="item.name !== 'Default' && item.name !== 'GLTFs'"
@@ -89,23 +89,13 @@ import * as THREE from "three";
 export default {
   name: "Scene",
 
-  computed: {
-    tree() {
-      console.log("computing tree");
-      if (!window.three) return [];
-      let getChildren = (parent) => {
-        return parent.children.map((child) => {
-          return {
-            name: child.name ? child.name : `(${child.type})`,
-            id: child.id,
-            type: child.type,
-            children: getChildren(child),
-          };
-        });
-      };
-      return getChildren(window.three.scene);
-    },
+  created() {
+    this.$root.$on("updateTree", () => {
+      this.updateTree();
+    });
+  },
 
+  computed: {
     selected() {
       if (window.three) {
         return window.three.selected;
@@ -117,6 +107,7 @@ export default {
 
   data() {
     return {
+      tree: [],
       useHdri: false,
       upAxis: "Z",
       viewMode: "Normal",
@@ -171,10 +162,32 @@ export default {
     },
   },
 
+  mounted() {
+    this.updateTree();
+  },
+
   methods: {
-    show(item) {
-      let obj = this.getObject(item.id);
-      obj.visible = !obj.visible;
+    updateTree() {
+      if (!window.three) return [];
+      let getChildren = (parent) => {
+        return parent.children.map((child) => {
+          return {
+            name: child.name ? child.name : `(${child.type})`,
+            id: child.id,
+            type: child.type,
+            visible: child.visible,
+            children: getChildren(child),
+          };
+        });
+      };
+
+      this.tree = getChildren(window.three.scene);
+      console.log("update tree", this.tree);
+    },
+
+    toggleVisibility(item) {
+      item.visible = !item.visible;
+      this.getObject(item.id).visible = item.visible;
     },
 
     onOpen(items) {
@@ -185,6 +198,7 @@ export default {
       if (window.confirm(`Are you sure you want to delete ${item.name}?`)) {
         let obj = this.getObject(item.id);
         obj.parent.remove(obj);
+        this.updateTree();
       }
     },
 
@@ -222,47 +236,48 @@ export default {
       return window.three.selected === obj;
     },
 
-    getColor(item) {
-      let obj = this.getObject(item.id);
-      if (obj.color) return obj.color;
-      if (obj.material) return obj.material.color;
-    },
+    // getColor(item) {
+    //   console.log("CHECK")
+    //   let obj = this.getObject(item.id);
+    //   if (obj.color) return obj.color;
+    //   if (obj.material) return obj.material.color;
+    // },
 
-    changeColor(item) {
-      this.colorObj = this.getObject(item.id);
-      let color = this.getColor(item);
-      this.showColorPicker = true;
-      setTimeout(() => {
-        this.color.rgba = {
-          r: color.r * 255,
-          g: color.g * 255,
-          b: color.b * 255,
-          a: 1,
-        };
-      }, 50);
-    },
+    // changeColor(item) {
+    //   this.colorObj = this.getObject(item.id);
+    //   let color = this.getColor(item);
+    //   this.showColorPicker = true;
+    //   setTimeout(() => {
+    //     this.color.rgba = {
+    //       r: color.r * 255,
+    //       g: color.g * 255,
+    //       b: color.b * 255,
+    //       a: 1,
+    //     };
+    //   }, 50);
+    // },
 
-    confirmColor() {
-      this.showColorPicker = false;
-      console.log(this.color);
-      if (this.colorObj.color) {
-        this.colorObj.color.setRGB(
-          this.color.rgba.r / 255,
-          this.color.rgba.g / 255,
-          this.color.rgba.b / 255
-        );
-      } else {
-        this.colorObj.material.color.setRGB(
-          this.color.rgba.r / 255,
-          this.color.rgba.g / 255,
-          this.color.rgba.b / 255
-        );
-      }
-    },
+    // confirmColor() {
+    //   this.showColorPicker = false;
+    //   console.log(this.color);
+    //   if (this.colorObj.color) {
+    //     this.colorObj.color.setRGB(
+    //       this.color.rgba.r / 255,
+    //       this.color.rgba.g / 255,
+    //       this.color.rgba.b / 255
+    //     );
+    //   } else {
+    //     this.colorObj.material.color.setRGB(
+    //       this.color.rgba.r / 255,
+    //       this.color.rgba.g / 255,
+    //       this.color.rgba.b / 255
+    //     );
+    //   }
+    // },
 
-    cancelColor() {
-      this.showColorPicker = false;
-    },
+    // cancelColor() {
+    //   this.showColorPicker = false;
+    // },
 
     showHdri() {
       if (this.useHdri) {

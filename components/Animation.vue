@@ -23,8 +23,8 @@ export default {
 
   computed: {
     animations(){
-        if (window.animations) {
-            return window.animations;
+        if (window.three && window.three.animations) {
+            return window.three.animations;
         }
         else{
             return [];

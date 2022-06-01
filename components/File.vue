@@ -148,7 +148,7 @@ export default {
           three.animations = gltf.animations.map((anime) => {
             return {
               name: anime.name,
-              action: mixer.clipAction(anime),
+              action: three.mixer.clipAction(anime),
             };
           });
 
@@ -170,6 +170,7 @@ export default {
           });
 
           this.fileLoading = false;
+          this.$root.$emit("updateTree");
         };
 
         if (this.fileSource === "Repo") {
