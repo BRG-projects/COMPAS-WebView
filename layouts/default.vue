@@ -11,6 +11,7 @@
       <Nuxt />
     </v-main>
     <Controller/>
+    <Property />
     <!-- <v-footer app>
       <span>&copy; {{ new Date().getFullYear() }}</span>
     </v-footer> -->
@@ -19,12 +20,14 @@
 
 <script>
 import Controller from "../components/Controller";
+import Property from "../components/Property";
 import { mapState, mapActions } from "vuex";
 
 export default {
   name: "DefaultLayout",
   components: {
     Controller,
+    Property
   },
   computed: mapState(["showController"]),
 

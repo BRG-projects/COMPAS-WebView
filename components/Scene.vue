@@ -47,9 +47,6 @@
               </span>
             </template>
             <template v-slot:append="{ item }">
-              <!-- <v-icon v-if="getColor(item)" @click="changeColor(item)">
-                mdi-palette
-              </v-icon> -->
               <v-icon @click="toggleVisibility(item)">
                 {{ item.visible ? "mdi-eye" : "mdi-eye-off" }}
               </v-icon>
@@ -65,6 +62,7 @@
               >
                 mdi-crosshairs
               </v-icon>
+              <v-icon @click="showProperty(item)"> mdi-cog </v-icon>
             </template>
           </v-treeview>
         </v-card>
@@ -129,6 +127,7 @@ export default {
         AmbientLight: "mdi-lightbulb",
         AxesHelper: "mdi-axis",
         GridHelper: "mdi-axis",
+        LineSegments: "mdi-vector-line",
       },
       backgroundColor: 0x1e1e1e,
       activated: [],
@@ -242,54 +241,42 @@ export default {
       return window.three.selected === obj;
     },
 
-    focus(item){
+    focus(item) {
       let obj = this.getObject(item.id);
       window.three.focus(obj);
-      console.log(obj)
+      console.log(obj);
     },
 
-    // getColor(item) {
-    //   console.log("CHECK")
-    //   let obj = this.getObject(item.id);
-    //   if (obj.color) return obj.color;
-    //   if (obj.material) return obj.material.color;
-    // },
+    showProperty(item) {
+      let obj = this.getObject(item.id);
+      let properties = [
+        {
+          key: "id",
+          value: item.id,
+        },
+        {
+          key: "name",
+          value: item.name,
+        },
+        {
+          key: "type",
+          value: item.type,
+        },
+        {
+          key: "visible",
+          value: item.visible,
+        },
+      ];
 
-    // changeColor(item) {
-    //   this.colorObj = this.getObject(item.id);
-    //   let color = this.getColor(item);
-    //   this.showColorPicker = true;
-    //   setTimeout(() => {
-    //     this.color.rgba = {
-    //       r: color.r * 255,
-    //       g: color.g * 255,
-    //       b: color.b * 255,
-    //       a: 1,
-    //     };
-    //   }, 50);
-    // },
-
-    // confirmColor() {
-    //   this.showColorPicker = false;
-    //   console.log(this.color);
-    //   if (this.colorObj.color) {
-    //     this.colorObj.color.setRGB(
-    //       this.color.rgba.r / 255,
-    //       this.color.rgba.g / 255,
-    //       this.color.rgba.b / 255
-    //     );
-    //   } else {
-    //     this.colorObj.material.color.setRGB(
-    //       this.color.rgba.r / 255,
-    //       this.color.rgba.g / 255,
-    //       this.color.rgba.b / 255
-    //     );
-    //   }
-    // },
-
-    // cancelColor() {
-    //   this.showColorPicker = false;
-    // },
+      if (obj.material) {
+        properties.push({
+          key: "material",
+          value: obj.material.type,
+          color: obj.material.color
+        });
+      }
+      this.$root.$emit("showProperty", properties);
+    },
 
     showHdri() {
       if (this.useHdri) {
