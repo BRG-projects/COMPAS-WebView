@@ -171,7 +171,7 @@ export default {
         (intersect) => intersect.object.type === "Mesh"
       );
       if (intersects.length > 0) {
-        console.log(intersects);
+        console.log("raytrace intersects", intersects);
         const obj = intersects[0].object;
         this.three.select(obj);
       } else {

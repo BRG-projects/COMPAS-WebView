@@ -32,6 +32,8 @@
             hoverable
             activatable
             :active="activated"
+            :open="opened"
+            @update:open="onOpen"
             @update:active="select"
           >
             <template v-slot:prepend="{ item }">
@@ -40,7 +42,7 @@
               </v-icon>
             </template>
             <template v-slot:label="{ item }">
-              <span class="pointer">
+              <span class="pointer" :ref="`label_${item.id}`">
                 {{ item.name }}
               </span>
             </template>
@@ -89,6 +91,7 @@ export default {
 
   computed: {
     tree() {
+      console.log("computing tree");
       if (!window.three) return [];
       let getChildren = (parent) => {
         return parent.children.map((child) => {
@@ -117,6 +120,7 @@ export default {
       useHdri: false,
       upAxis: "Z",
       viewMode: "Normal",
+      opened: [],
       showColorPicker: false,
       color: null,
       colorObj: null,
@@ -150,8 +154,12 @@ export default {
     },
 
     selected(selected) {
-      if (selected) this.activated = [selected.id];
-      else this.activated = [];
+      if (selected) {
+        this.activated = [selected.id];
+        let path = this.findPath(this.activated[0]);
+        this.opened = path;
+        this.scrollTo(this.activated[0]);
+      } else this.activated = [];
     },
 
     viewMode(val) {
@@ -167,6 +175,10 @@ export default {
     show(item) {
       let obj = this.getObject(item.id);
       obj.visible = !obj.visible;
+    },
+
+    onOpen(items) {
+      console.log(items);
     },
 
     remove(item) {
@@ -192,6 +204,17 @@ export default {
       if (this.selected && this.selected.id === activated[0]) return;
       let obj = this.getObject(activated[0]);
       window.three.select(obj);
+    },
+
+    findPath(id) {
+      let path = [];
+      let obj = this.getObject(id);
+      while (obj.parent) {
+        path.push(obj.parent.id);
+        obj = obj.parent;
+      }
+      path.pop();
+      return path.reverse();
     },
 
     isSelected(item) {
@@ -249,6 +272,12 @@ export default {
         window.three.scene.background = new THREE.Color(0x1e1e1e);
         window.three.scene.environment = null;
       }
+    },
+
+    scrollTo(id) {
+      setTimeout(() => {
+        this.$refs[`label_${id}`].scrollIntoView();
+      }, 200);
     },
   },
 };
