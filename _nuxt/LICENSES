@@ -1,12 +1,4 @@
 /*!
- * camera-controls
- * https://github.com/yomotsu/camera-controls
- * (c) 2017 @yomotsu
- * Released under the MIT License.
- */
-
-
-/*!
  * The buffer module from node.js, for the browser.
  *
  * @author   Feross Aboukhadijeh <http://feross.org>
@@ -40,6 +32,14 @@
  * @license
  * Copyright 2010-2022 Three.js Authors
  * SPDX-License-Identifier: MIT
+ */
+
+
+/*!
+ * camera-controls
+ * https://github.com/yomotsu/camera-controls
+ * (c) 2017 @yomotsu
+ * Released under the MIT License.
  */
 
 
