@@ -59,6 +59,12 @@
               >
                 mdi-delete
               </v-icon>
+              <v-icon
+                v-if="item.name !== 'Default' && item.name !== 'GLTFs'"
+                @click="focus(item)"
+              >
+                mdi-crosshairs
+              </v-icon>
             </template>
           </v-treeview>
         </v-card>
@@ -236,6 +242,12 @@ export default {
       return window.three.selected === obj;
     },
 
+    focus(item){
+      let obj = this.getObject(item.id);
+      window.three.focus(obj);
+      console.log(obj)
+    },
+
     // getColor(item) {
     //   console.log("CHECK")
     //   let obj = this.getObject(item.id);
@@ -291,7 +303,11 @@ export default {
 
     scrollTo(id) {
       setTimeout(() => {
-        this.$refs[`label_${id}`].scrollIntoView();
+        this.$refs[`label_${id}`].scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+          inline: "nearest",
+        });
       }, 200);
     },
   },

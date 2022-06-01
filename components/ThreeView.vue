@@ -118,6 +118,10 @@ class Three {
     }
   }
 
+  focus(obj){
+    this.controls.fitToSphere(obj, true);
+  }
+
   start() {
     let animate = () => {
       const delta = this.clock.getDelta();

@@ -28,7 +28,7 @@ export default function (angle) {
 
     if (this.index) {
 
-        const flattenPositisionAttribute = new THREE.BufferAttribute(new Float32Array(this.index.count * 3 * 3), 3);
+        const flattenPositisionAttribute = new THREE.BufferAttribute(new Float32Array(this.index.count * 3), 3);
         const normalAttribute = new THREE.BufferAttribute(
             new Float32Array(flattenPositisionAttribute.count * 3),
             3
