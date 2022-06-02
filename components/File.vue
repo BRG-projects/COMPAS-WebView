@@ -20,6 +20,7 @@
             'DamagedHelmet.gltf',
             'DragonAttenuation.glb',
             'InterpolationTest.glb',
+            'tubemesh.json',
           ]"
         ></v-select>
       </v-list-item-content>
@@ -82,6 +83,7 @@
 import { mapState, mapActions } from "vuex";
 import { AnimationMixer, Mesh, EdgesGeometry, LineSegments } from "three";
 import autoCreaseDetect from "./convert";
+import loadFromCompas from "./compas";
 
 export default {
   name: "File",
@@ -184,10 +186,21 @@ export default {
 
           three.loader.parse(content, "/", load_gltf);
         } else {
-          three.loader.load(file, load_gltf);
+          let ext = file.toLowerCase().split(".").pop();
+          if (ext === "gltf" || ext === "glb") {
+            three.loader.load(file, load_gltf);
+          } else if (ext === "json") {
+            let obj = await loadFromCompas(file);
+            if (obj) {
+              three.gltfGroup.add(obj);
+            }
+            this.fileLoading = false;
+          } else {
+            throw new Error("Unsupported file type");
+          }
         }
       } catch (e) {
-        console.log(e);
+        console.error(e);
         this.fileLoading = false;
         alert(e);
       }
