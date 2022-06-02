@@ -194,6 +194,7 @@ export default {
             if (obj) {
               three.gltfGroup.add(obj);
             }
+            this.$root.$emit("updateTree");
             this.fileLoading = false;
           } else {
             throw new Error("Unsupported file type");

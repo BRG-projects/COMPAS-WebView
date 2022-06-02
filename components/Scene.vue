@@ -30,7 +30,6 @@
           <v-treeview
             :items="tree"
             hoverable
-            activatable
             :active="activated"
             :open="opened"
             @update:open="onOpen"
@@ -42,7 +41,7 @@
               </v-icon>
             </template>
             <template v-slot:label="{ item }">
-              <span class="pointer" :ref="`label_${item.id}`">
+              <span class="pointer" :ref="`label_${item.id}`" @click.prevent="activate(item)">
                 {{ item.name }}
               </span>
             </template>
@@ -58,7 +57,7 @@
               </v-icon>
               <v-icon
                 v-if="item.name !== 'Default' && item.name !== 'GLTFs'"
-                @click="focus(item)"
+                @click.prevent="focus(item)"
               >
                 mdi-crosshairs
               </v-icon>
@@ -195,6 +194,10 @@ export default {
       this.getObject(item.id).visible = item.visible;
     },
 
+    activate(item){
+      this.activated = [item.id];
+    },
+
     onOpen(items) {
       console.log(items);
     },
@@ -272,7 +275,7 @@ export default {
         properties.push({
           key: "material",
           value: obj.material.type,
-          color: obj.material.color
+          color: obj.material.color,
         });
       }
       this.$root.$emit("showProperty", properties);
@@ -290,11 +293,13 @@ export default {
 
     scrollTo(id) {
       setTimeout(() => {
-        this.$refs[`label_${id}`].scrollIntoView({
-          behavior: "smooth",
-          block: "nearest",
-          inline: "nearest",
-        });
+        let label = this.$refs[`label_${id}`];
+        if (label)
+          label.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+            inline: "nearest",
+          });
       }, 200);
     },
   },
