@@ -1,31 +1,42 @@
 <template>
   <v-overlay :value="overlay">
-    <v-card>
-      <v-card-title>Property</v-card-title>
-      <v-data-table :headers="headers" :items="items" :items-per-page="15">
-        <template v-slot:item.value="{ item }">
-          <span>
-            {{ item.value }}
-          </span>
-          <v-icon v-if="item.color" @click="changeColor(item.color)"
-            >mdi-palette
-          </v-icon>
-          <div v-if="showColorPicker && item.color">
-            <v-color-picker
-              v-model="color"
-              dot-size="19"
-              swatches-max-height="200"
-            ></v-color-picker>
-            <v-btn color="primary" @click="confirmColor">Apply</v-btn>
-            <v-btn @click="cancelColor">Cancel</v-btn>
-          </div>
-        </template>
-      </v-data-table>
-
-      <v-card-actions>
-        <v-btn @click="overlay = false"> Close </v-btn>
-      </v-card-actions>
-    </v-card>
+    <v-row>
+      <v-col>
+        <v-card>
+          <v-card-title>Property</v-card-title>
+          <v-data-table :headers="headers" :items="items" :items-per-page="15">
+            <template v-slot:item.value="{ item }">
+              <span>
+                {{ item.value }}
+              </span>
+              <v-icon v-if="item.color" @click="changeColor(item.color)"
+                >mdi-palette
+              </v-icon>
+              <v-icon v-if="item.data" @click="showDataView = !showDataView"
+                >mdi-database-eye
+              </v-icon>
+              <div v-if="showColorPicker && item.color">
+                <v-color-picker
+                  v-model="color"
+                  dot-size="19"
+                  swatches-max-height="200"
+                ></v-color-picker>
+                <v-btn color="primary" @click="confirmColor">Apply</v-btn>
+                <v-btn @click="cancelColor">Cancel</v-btn>
+              </div>
+            </template>
+          </v-data-table>
+          <v-card-actions>
+            <v-btn @click="overlay = false"> Close </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-col>
+      <v-col v-if="showDataView">
+        <v-card light flat max-height="800" class="scroll ml-5">
+          <v-treeview :items="dataView"></v-treeview>
+        </v-card>
+      </v-col>
+    </v-row>
   </v-overlay>
 </template>
 <script>
@@ -35,6 +46,9 @@ export default {
     this.$root.$on("showProperty", (properties) => {
       this.overlay = true;
       this.items = properties;
+      properties.some((property) => {
+        if (property.data) this.mapData(property.data);
+      });
     });
   },
 
@@ -50,6 +64,9 @@ export default {
       showColorPicker: false,
       color: null,
       threeColorObj: null,
+
+      showDataView: false,
+      dataView: [],
     };
   },
 
@@ -81,6 +98,49 @@ export default {
       this.showColorPicker = false;
       this.threeColorObj = null;
     },
+
+    mapData(data) {
+      let id = 0;
+
+      let add_entries = (data) => {
+        let tree = [];
+
+        for (const [key, value] of Object.entries(data)) {
+          if (Array.isArray(value)) {
+            tree.push({
+              id: id++,
+              name: `${key} : []`,
+              children: add_entries(value),
+            });
+          } else if (typeof value === "object") {
+            tree.push({
+              id: id++,
+              name: `${key} : {}`,
+              children: add_entries(value),
+            });
+          } else {
+            tree.push({
+              id: id++,
+              name: `${key} : ${value}`,
+            });
+          }
+        }
+
+        return tree;
+      };
+
+      this.dataView = add_entries(data);
+    },
   },
 };
 </script>
+
+<style>
+.scroll {
+  overflow-y: scroll;
+}
+
+.v-data-table__wrapper > table > tbody > tr:hover {
+  background: inherit !important;
+}
+</style>

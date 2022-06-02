@@ -41,7 +41,11 @@
               </v-icon>
             </template>
             <template v-slot:label="{ item }">
-              <span class="pointer" :ref="`label_${item.id}`" @click.prevent="activate(item)">
+              <span
+                class="pointer"
+                :ref="`label_${item.id}`"
+                @click.prevent="activate(item)"
+              >
                 {{ item.name }}
               </span>
             </template>
@@ -194,7 +198,7 @@ export default {
       this.getObject(item.id).visible = item.visible;
     },
 
-    activate(item){
+    activate(item) {
       this.activated = [item.id];
     },
 
@@ -278,6 +282,15 @@ export default {
           color: obj.material.color,
         });
       }
+
+      if (obj.data) {
+        properties.push({
+          key: "data",
+          value: obj.data.dtype,
+          data: obj.data,
+        });
+      }
+
       this.$root.$emit("showProperty", properties);
     },
 

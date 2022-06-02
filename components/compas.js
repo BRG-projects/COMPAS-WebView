@@ -96,7 +96,7 @@ export default function compasToThree(content) {
         const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
         const lineSegments = new THREE.LineSegments(lineGeometry, lineMaterial);
         mesh.add(lineSegments)
-
+        mesh.data = content;
         return mesh;
 
     }
