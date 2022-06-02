@@ -1,5 +1,5 @@
 <template>
-  <v-navigation-drawer :value="showController" right app fixed width="400">
+  <v-navigation-drawer :value="showController" right app fixed width="500">
     <v-list>
       <v-list-group v-model="showSource">
         <template v-slot:activator>

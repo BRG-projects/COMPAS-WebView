@@ -83,7 +83,8 @@
 import { mapState, mapActions } from "vuex";
 import { AnimationMixer, Mesh, EdgesGeometry, LineSegments } from "three";
 import autoCreaseDetect from "./convert";
-import loadFromCompas from "./compas";
+import compasToThree from "./compas";
+import axios from "axios";
 
 export default {
   name: "File",
@@ -118,93 +119,107 @@ export default {
 
     async load() {
       try {
-        let file;
-        if (this.fileSource === "URL") {
-          file = this.fileURL;
-        }
-        if (this.fileSource === "Local") {
-          const toBase64 = (file) =>
-            new Promise((resolve, reject) => {
-              const reader = new FileReader();
-              reader.readAsDataURL(file);
-              reader.onload = () => resolve(reader.result);
-              reader.onerror = (error) => reject(error);
-            });
-
-          file = await toBase64(this.fileInput);
-        }
-        if (this.fileSource === "Examples") {
-          file = this.fileExample;
-          if (!window.location.host.includes("localhost"))
-            file = "/GLTF_viewer/" + file;
-        }
-
         this.fileLoading = true;
 
-        let load_gltf = (gltf) => {
-          let three = window.three;
+        let file;
+        let ext;
+        let content;
 
-          three.gltfGroup.add(gltf.scene);
+        switch (this.fileSource) {
+          case "URL":
+            file = this.fileURL;
+            ext = file.toLowerCase().split(".").pop();
+            content = await this.fetch_file(file, ext);
+            break;
 
-          three.mixer = new AnimationMixer(gltf.scene);
-          three.animations = gltf.animations.map((anime) => {
-            return {
-              name: anime.name,
-              action: three.mixer.clipAction(anime),
-            };
-          });
+          case "Local":
+            const toBase64 = (file) =>
+              new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = (error) => reject(error);
+              });
+            file = await toBase64(this.fileInput);
+            ext = this.fileInput.name.toLowerCase().split(".").pop();
+            content = await this.fetch_file(file, ext);
+            break;
 
-          gltf.scene.traverse(function (child) {
-            if (child instanceof Mesh) {
-              child.geometry.autoCreaseDetect = autoCreaseDetect;
-              let angle = 30;
-              let geometry = child.geometry.autoCreaseDetect(angle);
-              if (geometry) {
-                child.material.flatShading = false;
-                child._geometry = child.geometry;
-                child.geometry = geometry;
-                const edges = new EdgesGeometry(geometry, angle);
-                const line = new LineSegments(edges, three.edgeMaterial);
-                line.renderOrder = 1;
-                child.add(line);
+          case "Examples":
+            file = this.fileExample;
+            if (!window.location.host.includes("localhost"))
+              file = "/GLTF_viewer/" + file;
+            ext = file.toLowerCase().split(".").pop();
+            content = await this.fetch_file(file, ext);
+            break;
+
+          case "Repo":
+            ext = this.file.toLowerCase().split(".").pop();
+            content = await this.getFile({
+              owner: this.repoOwner,
+              repo: this.repoName,
+              pat: this.pat,
+              path: this.folder + "/" + this.file,
+              ref: this.tag,
+            });
+            break;
+        }
+
+        switch (ext) {
+          case "gltf":
+          case "glb":
+            let gltf = await three.loader.parseAsync(content, "/");
+            three.gltfGroup.add(gltf.scene);
+            three.mixer = new AnimationMixer(gltf.scene);
+            three.animations = gltf.animations.map((anime) => {
+              return {
+                name: anime.name,
+                action: three.mixer.clipAction(anime),
+              };
+            });
+            gltf.scene.traverse(function (child) {
+              if (child instanceof Mesh) {
+                child.geometry.autoCreaseDetect = autoCreaseDetect;
+                let angle = 30;
+                let geometry = child.geometry.autoCreaseDetect(angle);
+                if (geometry) {
+                  child.material.flatShading = false;
+                  child._geometry = child.geometry;
+                  child.geometry = geometry;
+                  const edges = new EdgesGeometry(geometry, angle);
+                  const line = new LineSegments(edges, three.edgeMaterial);
+                  line.renderOrder = 1;
+                  child.add(line);
+                }
               }
-            }
-          });
+            });
+            break;
 
-          this.fileLoading = false;
-          this.$root.$emit("updateTree");
-        };
-
-        if (this.fileSource === "Repo") {
-          let content = await this.getFile({
-            owner: this.repoOwner,
-            repo: this.repoName,
-            pat: this.pat,
-            path: this.folder + "/" + this.file,
-            ref: this.tag,
-          });
-
-          three.loader.parse(content, "/", load_gltf);
-        } else {
-          let ext = file.toLowerCase().split(".").pop();
-          if (ext === "gltf" || ext === "glb") {
-            three.loader.load(file, load_gltf);
-          } else if (ext === "json") {
-            let obj = await loadFromCompas(file);
+          case "json":
+            let obj = compasToThree(content);
             if (obj) {
               three.gltfGroup.add(obj);
             }
-            this.$root.$emit("updateTree");
-            this.fileLoading = false;
-          } else {
+            break;
+
+          default:
             throw new Error("Unsupported file type");
-          }
         }
+
+        three.controls.fitToSphere(three.gltfGroup, true);
       } catch (e) {
         console.error(e);
         this.fileLoading = false;
         alert(e);
       }
+
+      this.$root.$emit("updateTree");
+      this.fileLoading = false;
+    },
+
+    async fetch_file(file, ext) {
+      if (ext === "json") return (await axios.get(file)).data;
+      else return (await axios.get(file, { responseType: "arraybuffer" })).data;
     },
 
     async fetch() {
@@ -213,8 +228,6 @@ export default {
         repo: this.repoName,
         pat: this.pat,
       });
-
-      // this.tag = this.tagNames[0];
     },
   },
   watch: {

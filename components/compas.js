@@ -1,8 +1,6 @@
 import * as THREE from "three";
-import axios from "axios";
 
-
-function toThree(content) {
+export default function compasToThree(content) {
 
     console.log("toThree", content);
 
@@ -105,8 +103,3 @@ function toThree(content) {
 
 }
 
-
-export default async function (url) {
-    let response = await axios.get(url);
-    return toThree(response.data);
-}
