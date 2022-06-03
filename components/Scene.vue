@@ -1,97 +1,49 @@
 <template>
-  <v-list>
-    <!-- <v-list-item>
-      <v-list-item-content>
-        <v-switch label="HDRI" v-model="useHdri" @change="showHdri"></v-switch>
-      </v-list-item-content>
-    </v-list-item> -->
-
-    <v-list-item>
-      <v-list-item-content>
-        <v-radio-group v-model="backgroundColor" label="Background">
-          <v-radio label="Dark" :value="0x1e1e1e" />
-          <v-radio label="Light" :value="0xeeeeee" />
-        </v-radio-group>
-        <v-radio-group v-model="upAxis" label="Up Axis" class="ml-10">
-          <v-radio label="Y" value="Y" />
-          <v-radio label="Z" value="Z" />
-        </v-radio-group>
-        <v-radio-group v-model="viewMode" label="View Mode" class="ml-10">
-          <v-radio label="Normal" value="Normal" />
-          <v-radio label="Ghosted" value="Ghosted" />
-        </v-radio-group>
-        <v-radio-group v-model="gimbal" label="Gimbal" class="ml-10">
-          <v-radio label="On" :value="true" />
-          <v-radio label="Off" :value="false" />
-        </v-radio-group>
-      </v-list-item-content>
-    </v-list-item>
-
-    <v-list-item>
-      <v-list-item-content>
-        <v-card>
-          <v-card-title>Scene</v-card-title>
-          <v-treeview
-            :items="tree"
-            hoverable
-            :active="activated"
-            :open="opened"
-            @update:open="onOpen"
-            @update:active="select"
-          >
-            <template v-slot:prepend="{ item }">
-              <v-icon>
-                {{ icons[item.type] }}
-              </v-icon>
-            </template>
-            <template v-slot:label="{ item }">
-              <span
-                class="pointer"
-                :ref="`label_${item.id}`"
-                @click.prevent="activate(item)"
-              >
-                {{ item.name }}
-              </span>
-            </template>
-            <template v-slot:append="{ item }">
-              <v-icon @click="toggleVisibility(item)">
-                {{ item.visible ? "mdi-eye" : "mdi-eye-off" }}
-              </v-icon>
-              <v-icon
-                v-if="item.name !== 'Default' && item.name !== 'GLTFs'"
-                @click="remove(item)"
-              >
-                mdi-delete
-              </v-icon>
-              <v-icon
-                v-if="item.name !== 'Default' && item.name !== 'GLTFs'"
-                @click.prevent="focus(item)"
-              >
-                mdi-crosshairs
-              </v-icon>
-              <v-icon @click="showProperty(item)"> mdi-cog </v-icon>
-            </template>
-          </v-treeview>
-        </v-card>
-      </v-list-item-content>
-    </v-list-item>
-
-    <v-list-item v-if="showColorPicker">
-      <v-list-item-content>
-        <v-row>
-          <v-color-picker
-            v-model="color"
-            dot-size="19"
-            swatches-max-height="200"
-          ></v-color-picker>
-        </v-row>
-        <v-row
-          ><v-btn @click="confirmColor">Confirm</v-btn
-          ><v-btn @click="cancelColor">Cancel</v-btn></v-row
+  <v-card color="black" class="ma-2">
+    <v-card-title>Scene</v-card-title>
+    <v-treeview
+      :items="tree"
+      dense
+      hoverable
+      :active="activated"
+      :open="opened"
+      @update:open="onOpen"
+      @update:active="select"
+    >
+      <template v-slot:prepend="{ item }">
+        <v-icon>
+          {{ icons[item.type] }}
+        </v-icon>
+      </template>
+      <template v-slot:label="{ item }">
+        <span
+          class="pointer"
+          :ref="`label_${item.id}`"
+          @click.prevent="activate(item)"
         >
-      </v-list-item-content>
-    </v-list-item>
-  </v-list>
+          {{ item.name }}
+        </span>
+      </template>
+      <template v-slot:append="{ item }">
+        <v-icon @click="toggleVisibility(item)">
+          {{ item.visible ? "mdi-eye" : "mdi-eye-off" }}
+        </v-icon>
+        <v-icon
+          v-if="item.name !== 'Default' && item.name !== 'GLTFs'"
+          @click="remove(item)"
+        >
+          mdi-delete
+        </v-icon>
+        <v-icon
+          v-if="item.name !== 'Default' && item.name !== 'GLTFs'"
+          @click.prevent="focus(item)"
+        >
+          mdi-crosshairs
+        </v-icon>
+        <v-icon @click="showProperty(item)"> mdi-cog </v-icon>
+      </template>
+    </v-treeview>
+  </v-card>
 </template>
 
 <script>
@@ -119,13 +71,7 @@ export default {
   data() {
     return {
       tree: [],
-      useHdri: false,
-      upAxis: "Z",
-      viewMode: "Normal",
       opened: [],
-      showColorPicker: false,
-      color: null,
-      colorObj: null,
       icons: {
         Group: "mdi-folder-multiple",
         Mesh: "mdi-vector-triangle",
@@ -136,27 +82,11 @@ export default {
         GridHelper: "mdi-axis",
         LineSegments: "mdi-vector-line",
       },
-      backgroundColor: 0x1e1e1e,
       activated: [],
-      gimbal: false,
     };
   },
 
   watch: {
-    upAxis(val) {
-      if (val === "Y") {
-        three.camera.up.set(0, 1, 0);
-        three.controls.updateCameraUp();
-      } else {
-        three.camera.up.set(0, 0, 1);
-        three.controls.updateCameraUp();
-      }
-    },
-
-    backgroundColor(val) {
-      three.scene.background.setHex(val);
-    },
-
     selected(selected) {
       if (selected) {
         this.activated = [selected.id];
@@ -164,26 +94,6 @@ export default {
         this.opened = path;
         this.scrollTo(this.activated[0]);
       } else this.activated = [];
-    },
-
-    viewMode(val) {
-      if (val === "Normal") {
-        three.edgeMaterial.depthTest = true;
-      } else if (val === "Ghosted") {
-        three.edgeMaterial.depthTest = false;
-      }
-    },
-
-    gimbal(val) {
-      if (val) {
-        three.enableTransformControls = true;
-        if (three.selected) {
-          three.transformControls.attach(three.selected);
-        }
-      } else {
-        three.enableTransformControls = false;
-        three.transformControls.detach();
-      }
     },
   },
 
@@ -313,16 +223,6 @@ export default {
       this.$root.$emit("showProperty", properties);
     },
 
-    showHdri() {
-      if (this.useHdri) {
-        three.scene.background = three.hdri;
-        three.scene.environment = three.hdri;
-      } else {
-        three.scene.background = new THREE.Color(0x1e1e1e);
-        three.scene.environment = null;
-      }
-    },
-
     scrollTo(id) {
       setTimeout(() => {
         let label = this.$refs[`label_${id}`];
@@ -341,5 +241,9 @@ export default {
 <style scoped>
 .pointer {
   cursor: pointer;
+}
+
+.scroll {
+  overflow-y: scroll;
 }
 </style>

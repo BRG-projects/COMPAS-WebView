@@ -1,31 +1,26 @@
 <template>
   <v-navigation-drawer :value="showController" right app fixed width="500">
-    <v-list>
-      <v-list-group v-model="showSource">
-        <template v-slot:activator>
-          <v-list-item-content>
-            <v-list-item-title>File</v-list-item-title>
-          </v-list-item-content>
-        </template>
+    <v-tabs v-model="tab">
+      <v-tab key="File"><v-icon>mdi-folder</v-icon></v-tab>
+      <v-tab key="Scene"><v-icon>mdi-file-tree</v-icon></v-tab>
+      <v-tab key="Environment"><v-icon>mdi-earth</v-icon></v-tab>
+      <v-tab key="Animation"><v-icon>mdi-motion-play</v-icon></v-tab>
+    </v-tabs>
+
+    <v-tabs-items v-model="tab" class="full-height-tab">
+      <v-tab-item key="File">
         <File />
-      </v-list-group>
-      <v-list-group v-model="showScene">
-        <template v-slot:activator>
-          <v-list-item-content>
-            <v-list-item-title>Scene</v-list-item-title>
-          </v-list-item-content>
-        </template>
+      </v-tab-item>
+      <v-tab-item key="Scene">
         <Scene />
-      </v-list-group>
-      <v-list-group v-model="showAnimation">
-        <template v-slot:activator>
-          <v-list-item-content>
-            <v-list-item-title>Animation</v-list-item-title>
-          </v-list-item-content>
-        </template>
+      </v-tab-item>
+      <v-tab-item key="Environment">
+        <Environment />
+      </v-tab-item>
+      <v-tab-item key="Animation">
         <Animation />
-      </v-list-group>
-    </v-list>
+      </v-tab-item>
+    </v-tabs-items>
   </v-navigation-drawer>
 </template>
 
@@ -33,6 +28,7 @@
 import { mapState } from "vuex";
 import File from "./File.vue";
 import Scene from "./Scene.vue";
+import Environment from "./Environment.vue";
 import Animation from "./Animation.vue";
 
 export default {
@@ -41,18 +37,22 @@ export default {
     File,
     Scene,
     Animation,
+    Environment,
   },
   computed: {
     ...mapState(["showController"]),
   },
   data() {
     return {
-      showSource: true,
-      showAnimation: false,
-      showScene: false,
-      animations: [],
+      tab: null,
     };
   },
   methods: {},
 };
 </script>
+<style >
+.v-tabs-items.full-height-tab .v-window-item {
+  height: calc(100vh - 48px); /* Adjust 270px to suits your needs */
+  overflow-y: auto;
+}
+</style>

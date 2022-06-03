@@ -124,11 +124,12 @@ class Three {
       this.selected = obj;
       obj.selected = true;
       this.outlinePass.selectedObjects = [obj];
-      if (this.enableTransformControls && obj.type === "Mesh") {
+      if (this.enableTransformControls) {
         this.transformControls.attach(obj);
-        this.transformControls.position.copy(
-          obj.geometry.boundingSphere.center
-        );
+        if (obj.geometry)
+          this.transformControls.position.copy(
+            obj.geometry.boundingSphere.center
+          );
       }
     } else {
       this.selected = null;
