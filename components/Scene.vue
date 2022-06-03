@@ -20,6 +20,10 @@
           <v-radio label="Normal" value="Normal" />
           <v-radio label="Ghosted" value="Ghosted" />
         </v-radio-group>
+        <v-radio-group v-model="gimbal" label="Gimbal" class="ml-10">
+          <v-radio label="On" :value="true" />
+          <v-radio label="Off" :value="false" />
+        </v-radio-group>
       </v-list-item-content>
     </v-list-item>
 
@@ -104,8 +108,8 @@ export default {
 
   computed: {
     selected() {
-      if (window.three) {
-        return window.three.selected;
+      if (three) {
+        return three.selected;
       } else {
         return null;
       }
@@ -134,22 +138,23 @@ export default {
       },
       backgroundColor: 0x1e1e1e,
       activated: [],
+      gimbal: false,
     };
   },
 
   watch: {
     upAxis(val) {
       if (val === "Y") {
-        window.three.camera.up.set(0, 1, 0);
-        window.three.controls.updateCameraUp();
+        three.camera.up.set(0, 1, 0);
+        three.controls.updateCameraUp();
       } else {
-        window.three.camera.up.set(0, 0, 1);
-        window.three.controls.updateCameraUp();
+        three.camera.up.set(0, 0, 1);
+        three.controls.updateCameraUp();
       }
     },
 
     backgroundColor(val) {
-      window.three.scene.background.setHex(val);
+      three.scene.background.setHex(val);
     },
 
     selected(selected) {
@@ -163,9 +168,21 @@ export default {
 
     viewMode(val) {
       if (val === "Normal") {
-        window.three.edgeMaterial.depthTest = true;
+        three.edgeMaterial.depthTest = true;
       } else if (val === "Ghosted") {
-        window.three.edgeMaterial.depthTest = false;
+        three.edgeMaterial.depthTest = false;
+      }
+    },
+
+    gimbal(val) {
+      if (val) {
+        three.enableTransformControls = true;
+        if (three.selected) {
+          three.transformControls.attach(three.selected);
+        }
+      } else {
+        three.enableTransformControls = false;
+        three.transformControls.detach();
       }
     },
   },
@@ -176,20 +193,22 @@ export default {
 
   methods: {
     updateTree() {
-      if (!window.three) return [];
+      if (!three) return [];
       let getChildren = (parent) => {
-        return parent.children.map((child) => {
-          return {
-            name: child.name ? child.name : `(${child.type})`,
-            id: child.id,
-            type: child.type,
-            visible: child.visible,
-            children: getChildren(child),
-          };
-        });
+        return parent.children
+          .filter((child) => child.name !== "Gimbal")
+          .map((child) => {
+            return {
+              name: child.name ? child.name : `(${child.type})`,
+              id: child.id,
+              type: child.type,
+              visible: child.visible,
+              children: getChildren(child),
+            };
+          });
       };
 
-      this.tree = getChildren(window.three.scene);
+      this.tree = getChildren(three.scene);
       console.log("update tree", this.tree);
     },
 
@@ -207,7 +226,7 @@ export default {
     },
 
     remove(item) {
-      if (window.confirm(`Are you sure you want to delete ${item.name}?`)) {
+      if (confirm(`Are you sure you want to delete ${item.name}?`)) {
         let obj = this.getObject(item.id);
         obj.parent.remove(obj);
         this.updateTree();
@@ -216,7 +235,7 @@ export default {
 
     getObject(id) {
       let obj;
-      window.three.scene.traverse((child) => {
+      three.scene.traverse((child) => {
         if (child.id == id) {
           obj = child;
         }
@@ -229,7 +248,7 @@ export default {
       if (activated.length === 0) return;
       if (this.selected && this.selected.id === activated[0]) return;
       let obj = this.getObject(activated[0]);
-      window.three.select(obj);
+      three.select(obj);
     },
 
     findPath(id) {
@@ -245,12 +264,12 @@ export default {
 
     isSelected(item) {
       let obj = this.getObject(item.id);
-      return window.three.selected === obj;
+      return three.selected === obj;
     },
 
     focus(item) {
       let obj = this.getObject(item.id);
-      window.three.focus(obj);
+      three.focus(obj);
       console.log(obj);
     },
 
@@ -296,11 +315,11 @@ export default {
 
     showHdri() {
       if (this.useHdri) {
-        window.three.scene.background = window.three.hdri;
-        window.three.scene.environment = window.three.hdri;
+        three.scene.background = three.hdri;
+        three.scene.environment = three.hdri;
       } else {
-        window.three.scene.background = new THREE.Color(0x1e1e1e);
-        window.three.scene.environment = null;
+        three.scene.background = new THREE.Color(0x1e1e1e);
+        three.scene.environment = null;
       }
     },
 

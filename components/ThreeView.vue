@@ -13,6 +13,7 @@ import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { OutlinePass } from "three/examples/jsm/postprocessing/OutlinePass.js";
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import { FXAAShader } from "three/examples/jsm/shaders/FXAAShader.js";
+import { TransformControls } from "three/examples/jsm/controls/TransformControls.js";
 import CameraControls from "camera-controls";
 
 CameraControls.install({ THREE });
@@ -45,6 +46,7 @@ class Three {
     this.edgeMaterial = new THREE.LineBasicMaterial({
       color: 0xffffff,
     });
+    this.enableTransformControls = false;
   }
 
   setup(refs) {
@@ -73,6 +75,16 @@ class Three {
     this.scene.background = new THREE.Color(0x1e1e1e);
     this.refs.canvas.appendChild(this.renderer.domElement);
     this.controls = new CameraControls(this.camera, this.renderer.domElement);
+    this.transformControls = new TransformControls(
+      this.camera,
+      this.renderer.domElement
+    );
+    this.transformControls.name = "Gimbal";
+    this.scene.add(this.transformControls);
+
+    this.transformControls.addEventListener("dragging-changed", (event) => {
+      this.controls.enabled = !event.value;
+    });
 
     this.composer = new EffectComposer(this.renderer);
 
@@ -81,7 +93,7 @@ class Three {
 
     this.outlinePass = new OutlinePass(
       new THREE.Vector2(window.innerWidth, window.innerHeight),
-      this.scene,
+      this.gltfGroup,
       this.camera
     );
     this.composer.addPass(this.outlinePass);
@@ -112,13 +124,20 @@ class Three {
       this.selected = obj;
       obj.selected = true;
       this.outlinePass.selectedObjects = [obj];
+      if (this.enableTransformControls && obj.type === "Mesh") {
+        this.transformControls.attach(obj);
+        this.transformControls.position.copy(
+          obj.geometry.boundingSphere.center
+        );
+      }
     } else {
       this.selected = null;
       this.outlinePass.selectedObjects = [];
+      this.transformControls.detach();
     }
   }
 
-  focus(obj){
+  focus(obj) {
     this.controls.fitToSphere(obj, true);
   }
 
