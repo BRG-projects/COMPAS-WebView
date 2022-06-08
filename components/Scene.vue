@@ -1,56 +1,66 @@
 <template>
-  <v-card color="black" class="ma-2">
-    <v-card-title>Scene</v-card-title>
-    <v-treeview
-      :items="tree"
-      dense
-      hoverable
-      :active="activated"
-      :open="opened"
-      @update:open="onOpen"
-      @update:active="select"
-    >
-      <template v-slot:prepend="{ item }">
-        <v-icon>
-          {{ icons[item.type] }}
-        </v-icon>
-      </template>
-      <template v-slot:label="{ item }">
-        <span
-          class="pointer"
-          :ref="`label_${item.id}`"
-          @click.prevent="activate(item)"
-        >
-          {{ item.name }}
-        </span>
-      </template>
-      <template v-slot:append="{ item }">
-        <v-icon @click="toggleVisibility(item)">
-          {{ item.visible ? "mdi-eye" : "mdi-eye-off" }}
-        </v-icon>
-        <v-icon
-          v-if="item.name !== 'Default' && item.name !== 'GLTFs'"
-          @click="remove(item)"
-        >
-          mdi-delete
-        </v-icon>
-        <v-icon
-          v-if="item.name !== 'Default' && item.name !== 'GLTFs'"
-          @click.prevent="focus(item)"
-        >
-          mdi-crosshairs
-        </v-icon>
-        <v-icon @click="showProperty(item)"> mdi-cog </v-icon>
-      </template>
-    </v-treeview>
-  </v-card>
+  <v-container>
+    <v-card color="black" class="scroll" :height="halfHeight">
+      <v-card-title>Scene</v-card-title>
+      <v-treeview
+        :items="tree"
+        dense
+        hoverable
+        :active="activated"
+        :open="opened"
+        @update:open="onOpen"
+        @update:active="select"
+      >
+        <template v-slot:prepend="{ item }">
+          <v-icon>
+            {{ icons[item.type] }}
+          </v-icon>
+        </template>
+        <template v-slot:label="{ item }">
+          <span
+            class="pointer"
+            :ref="`label_${item.id}`"
+            @click.prevent="activate(item)"
+          >
+            {{ item.name }}
+          </span>
+        </template>
+        <template v-slot:append="{ item }">
+          <v-icon @click="toggleVisibility(item)">
+            {{ item.visible ? "mdi-eye" : "mdi-eye-off" }}
+          </v-icon>
+          <v-icon
+            v-if="item.name !== 'Default' && item.name !== 'GLTFs'"
+            @click="remove(item)"
+          >
+            mdi-delete
+          </v-icon>
+          <v-icon
+            v-if="item.name !== 'Default' && item.name !== 'GLTFs'"
+            @click.prevent="focus(item)"
+          >
+            mdi-crosshairs
+          </v-icon>
+          <v-icon @click="showProperty(item)"> mdi-cog </v-icon>
+        </template>
+      </v-treeview>
+    </v-card>
+
+    <v-divider class="my-5"></v-divider>
+
+    <Property />
+  </v-container>
 </template>
 
 <script>
-import * as THREE from "three";
+import Property from "./Property.vue";
 
 export default {
   name: "Scene",
+
+  components: {
+    Property,
+  },
 
   created() {
     this.$root.$on("updateTree", () => {
@@ -65,6 +75,10 @@ export default {
       } else {
         return null;
       }
+    },
+
+    halfHeight() {
+      return (document.body.clientHeight - 48) / 2;
     },
   },
 
@@ -87,18 +101,14 @@ export default {
   },
 
   watch: {
-    selected(selected) {
-      if (selected) {
-        this.activated = [selected.id];
-        let path = this.findPath(this.activated[0]);
-        this.opened = path;
-        this.scrollTo(this.activated[0]);
-      } else this.activated = [];
+    selected() {
+      this.updateActivated();
     },
   },
 
   mounted() {
     this.updateTree();
+    this.updateActivated();
   },
 
   methods: {
@@ -129,6 +139,23 @@ export default {
 
     activate(item) {
       this.activated = [item.id];
+      this.showProperty(item);
+    },
+
+    updateActivated() {
+      if (this.selected) {
+        this.activated = [this.selected.id];
+        let path = this.findPath(this.activated[0]);
+        this.opened = path;
+        this.scrollTo(this.activated[0]);
+
+        let item = this.getItem(this.activated[0]);
+        console.log("updateActivated", this.activated[0]);
+        console.log("item", item);
+        if (item) {
+          this.showProperty(item);
+        }
+      } else this.activated = [];
     },
 
     onOpen(items) {
@@ -152,6 +179,24 @@ export default {
       });
 
       return obj;
+    },
+
+    getItem(id) {
+      let found = {};
+      let findItem = (parent, id, found) => {
+        console.log("CHECKING",id)
+        if (parent.id == id) {
+          found.item = parent;
+        } else if (parent.children) {
+          parent.children.forEach((child) => {
+            findItem(child, id, found);
+          });
+        }
+      };
+
+      findItem({children: this.tree}, id, found);
+
+      return found.item;
     },
 
     select(activated) {

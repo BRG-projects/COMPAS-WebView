@@ -11,7 +11,7 @@
       <Nuxt />
     </v-main>
     <Controller/>
-    <Property />
+    <DataForm />
     <!-- <v-footer app>
       <span>&copy; {{ new Date().getFullYear() }}</span>
     </v-footer> -->
@@ -20,14 +20,15 @@
 
 <script>
 import Controller from "../components/Controller";
-import Property from "../components/Property";
 import { mapState, mapActions } from "vuex";
+
+import DataForm from "../components/DataForm.vue";
 
 export default {
   name: "DefaultLayout",
   components: {
     Controller,
-    Property
+    DataForm,
   },
   computed: mapState(["showController"]),
 
