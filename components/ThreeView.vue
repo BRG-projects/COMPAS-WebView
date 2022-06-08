@@ -34,8 +34,9 @@ class Three {
     this.axes = new THREE.AxesHelper(5);
     this.grid = new THREE.GridHelper(10, 10);
     this.clock = new THREE.Clock();
-    this.group = new THREE.Group();
-    this.gltfGroup = new THREE.Group();
+    this.defaultGroup = new THREE.Group();
+    this.interactiveGroup = new THREE.Group();
+    this.objectsGroup = new THREE.Group();
     this.loader = new GLTFLoader();
     this.clock = new THREE.Clock();
     this.mixer = null;
@@ -43,6 +44,7 @@ class Three {
     this.selected = null;
     this.pointer = new THREE.Vector2();
     this.raycaster = new THREE.Raycaster();
+    this.raycaster.params.Line.threshold = 3;
     this.edgeMaterial = new THREE.LineBasicMaterial({
       color: 0xffffff,
     });
@@ -51,12 +53,12 @@ class Three {
 
   setup(refs) {
     this.refs = refs;
-    this.group.name = "Default";
+    this.defaultGroup.name = "Default";
     this.camera.position.set(5, 5, 5);
     this.camera.up.set(0, 0, 1);
     this.camera.add(this.pointLight);
-    this.group.add(this.ambientLight);
-    this.group.add(this.camera);
+    this.defaultGroup.add(this.ambientLight);
+    this.defaultGroup.add(this.camera);
 
     this.axes.geometry.attributes.position.count = 4;
     this.axes.material.depthTest = false;
@@ -64,13 +66,12 @@ class Three {
     this.axes.renderOrder = -1;
     this.grid.renderOrder = -2;
     this.grid.rotateX(-Math.PI / 2);
-    this.group.add(this.grid);
+    this.defaultGroup.add(this.grid);
 
-    this.group.add(this.axes);
-    this.scene.add(this.group);
-
-    this.gltfGroup.name = "GLTFs";
-    this.scene.add(this.gltfGroup);
+    this.defaultGroup.add(this.axes);
+    this.scene.add(this.defaultGroup);
+    this.interactiveGroup.add(this.objectsGroup);
+    this.scene.add(this.interactiveGroup);
 
     this.scene.background = new THREE.Color(0x1e1e1e);
     this.refs.canvas.appendChild(this.renderer.domElement);
@@ -93,7 +94,7 @@ class Three {
 
     this.outlinePass = new OutlinePass(
       new THREE.Vector2(window.innerWidth, window.innerHeight),
-      this.gltfGroup,
+      this.interactiveGroup,
       this.camera
     );
     this.composer.addPass(this.outlinePass);
@@ -189,7 +190,7 @@ export default {
     onMouseDown() {
       this.three.raycaster.setFromCamera(this.three.pointer, this.three.camera);
       let intersects = this.three.raycaster.intersectObjects(
-        this.three.gltfGroup.children
+        this.three.interactiveGroup.children
       );
       intersects = intersects.filter(
         (intersect) => intersect.object.type === "Mesh"
