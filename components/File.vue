@@ -21,6 +21,7 @@
             'DragonAttenuation.glb',
             'InterpolationTest.glb',
             'tubemesh.json',
+            'viewobjects.json'
           ]"
         ></v-select>
       </v-list-item-content>
@@ -169,7 +170,7 @@ export default {
           case "gltf":
           case "glb":
             let gltf = await three.loader.parseAsync(content, "/");
-            three.gltfGroup.add(gltf.scene);
+            three.objectsGroup.add(gltf.scene);
             three.mixer = new AnimationMixer(gltf.scene);
             three.animations = gltf.animations.map((anime) => {
               return {
@@ -196,17 +197,26 @@ export default {
             break;
 
           case "json":
-            let obj = compasToThree(content);
+            console.log("json", content);
+            if (Array.isArray(content)){
+              content.forEach(function(obj){
+                let mesh = compasToThree(obj.data, obj.settings);
+                three.objectsGroup.add(mesh);
+              });
+            }else{
+              let obj = compasToThree(content);
             if (obj) {
-              three.gltfGroup.add(obj);
+              three.objectsGroup.add(obj);
             }
+            }
+            
             break;
 
           default:
             throw new Error("Unsupported file type");
         }
 
-        three.controls.fitToSphere(three.gltfGroup, true);
+        three.controls.fitToSphere(three.objectsGroup, true);
       } catch (e) {
         console.error(e);
         this.fileLoading = false;

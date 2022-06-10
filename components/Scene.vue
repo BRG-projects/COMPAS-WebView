@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-card color="black" class="scroll" :height="halfHeight">
-      <v-card-title>Scene</v-card-title>
+      <v-card-title>{{ mode }}</v-card-title>
       <v-treeview
         :items="tree"
         dense
@@ -41,10 +41,14 @@
           >
             mdi-crosshairs
           </v-icon>
-          <v-icon @click="showProperty(item)"> mdi-cog </v-icon>
+          <v-icon v-if="getObject(item.id).data" @click="editAttributes(item)">
+            mdi-cog
+          </v-icon>
         </template>
       </v-treeview>
     </v-card>
+
+    <v-btn class="my-2" v-if="mode==='Attributes'" @click="exitAttributes()">Exit Attributes Editing</v-btn>
 
     <v-divider class="my-5"></v-divider>
 
@@ -54,6 +58,7 @@
 
 <script>
 import Property from "./Property.vue";
+import { generateAttributesView } from "./compas";
 
 export default {
   name: "Scene",
@@ -84,6 +89,7 @@ export default {
 
   data() {
     return {
+      mode: "Scene",
       tree: [],
       opened: [],
       icons: {
@@ -97,6 +103,7 @@ export default {
         LineSegments: "mdi-vector-line",
       },
       activated: [],
+      attributeEditingObject: null,
     };
   },
 
@@ -112,7 +119,7 @@ export default {
   },
 
   methods: {
-    updateTree() {
+    updateTree(object) {
       if (!three) return [];
       let getChildren = (parent) => {
         return parent.children
@@ -128,7 +135,7 @@ export default {
           });
       };
 
-      this.tree = getChildren(three.scene);
+      this.tree = getChildren(object || three.objectsGroup);
       console.log("update tree", this.tree);
     },
 
@@ -184,7 +191,6 @@ export default {
     getItem(id) {
       let found = {};
       let findItem = (parent, id, found) => {
-        console.log("CHECKING",id)
         if (parent.id == id) {
           found.item = parent;
         } else if (parent.children) {
@@ -194,7 +200,7 @@ export default {
         }
       };
 
-      findItem({children: this.tree}, id, found);
+      findItem({ children: this.tree }, id, found);
 
       return found.item;
     },
@@ -278,6 +284,25 @@ export default {
             inline: "nearest",
           });
       }, 200);
+    },
+
+    editAttributes(item) {
+      let obj = this.getObject(item.id);
+      let attributesGroup = generateAttributesView(obj.data);
+
+      this.updateTree(attributesGroup);
+      this.mode = "Attributes";
+      three.attributesGroup = attributesGroup;
+      three.interactiveGroup.add(attributesGroup);
+      three.interactiveGroup.remove(three.objectsGroup);
+    },
+
+    exitAttributes() {
+      this.updateTree();
+      this.mode = "Scene";
+      three.interactiveGroup.add(three.objectsGroup);
+      three.interactiveGroup.remove(three.attributesGroup);
+      delete three.attributesGroup;
     },
   },
 };
