@@ -48,7 +48,7 @@
       </v-treeview>
     </v-card>
 
-    <v-btn class="my-2" v-if="mode==='Attributes'" @click="exitAttributes()">Exit Attributes Editing</v-btn>
+    <v-btn class="my-2" v-if="mode==='Attributes'" @click="exitEditAttributes()">Exit Edit Attributes</v-btn>
 
     <v-divider class="my-5"></v-divider>
 
@@ -85,11 +85,14 @@ export default {
     halfHeight() {
       return (document.body.clientHeight - 48) / 2;
     },
+
+    mode(){
+      if(three) return three.mode;
+    }
   },
 
   data() {
     return {
-      mode: "Scene",
       tree: [],
       opened: [],
       icons: {
@@ -101,6 +104,7 @@ export default {
         AxesHelper: "mdi-axis",
         GridHelper: "mdi-axis",
         LineSegments: "mdi-vector-line",
+        Points: "mdi-square-medium-outline"
       },
       activated: [],
       attributeEditingObject: null,
@@ -288,21 +292,13 @@ export default {
 
     editAttributes(item) {
       let obj = this.getObject(item.id);
-      let attributesGroup = generateAttributesView(obj.data);
-
-      this.updateTree(attributesGroup);
-      this.mode = "Attributes";
-      three.attributesGroup = attributesGroup;
-      three.interactiveGroup.add(attributesGroup);
-      three.interactiveGroup.remove(three.objectsGroup);
+      three.editAttributes(obj);
+      this.updateTree(obj);
     },
 
-    exitAttributes() {
+    exitEditAttributes() {
+      three.exitEditAttributes();
       this.updateTree();
-      this.mode = "Scene";
-      three.interactiveGroup.add(three.objectsGroup);
-      three.interactiveGroup.remove(three.attributesGroup);
-      delete three.attributesGroup;
     },
   },
 };

@@ -1,10 +1,13 @@
 import * as THREE from "three";
 
-export default function compasToThree(data, settings={}) {
+export default function compasToThree(data, settings = {}) {
 
     console.log("toThree", data);
 
     if (data.dtype === "compas.datastructures/Mesh") {
+
+        const mesh = new THREE.Group();
+        mesh.type = "Mesh"
 
         let vertices = [];
         let normals = [];
@@ -86,14 +89,17 @@ export default function compasToThree(data, settings={}) {
         geometry.setAttribute("normal", normal);
 
         let colorFaces = settings['color.faces']
-        if (colorFaces){
+        if (colorFaces) {
             colorFaces = new THREE.Color(colorFaces.value.red, colorFaces.value.green, colorFaces.value.blue);
-        }else{
+        } else {
             colorFaces = new THREE.Color(0x0092D2);
         }
 
         const material = new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, color: colorFaces, flatShading: false });
-        const mesh = new THREE.Mesh(geometry, material);
+        const faces = new THREE.Mesh(geometry, material);
+        faces.name = "faces";
+
+        mesh.add(faces);
 
         lines = lines.flat()
         lines = lines.map(v => [v.x, v.y, v.z]);
@@ -102,15 +108,54 @@ export default function compasToThree(data, settings={}) {
         lineGeometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(lines.flat()), 3));
 
         let colorEdges = settings['color.edges']
-        if (colorEdges){
+        if (colorEdges) {
             colorEdges = new THREE.Color(colorEdges.value.red, colorEdges.value.green, colorEdges.value.blue);
-        }else{
+        } else {
             colorEdges = new THREE.Color(0xffffff);
         }
 
         const lineMaterial = new THREE.LineBasicMaterial({ color: colorEdges });
         const lineSegments = new THREE.LineSegments(lineGeometry, lineMaterial);
+        lineSegments.name = "edges";
         mesh.add(lineSegments)
+
+        vertices = [];
+        const sizes = [];
+        const colors = [];
+        for (const [_, v] of Object.entries(data.value.vertex)) {
+            vertices.push([v.x, v.y, v.z]);
+            sizes.push(10);
+            colors.push([1, 0 , 0]);
+        }
+
+        position = new THREE.BufferAttribute(new Float32Array(vertices.flat()), 3);
+
+        const pointsGeometry = new THREE.BufferGeometry();
+        pointsGeometry.setAttribute("position", position);
+        // geometry.setAttribute( 'customColor', new THREE.Float32BufferAttribute( colors.flat(), 3 ) );
+        pointsGeometry.setAttribute( 'size', new THREE.Float32BufferAttribute( sizes, 1 ) );
+
+        let colorPoints = settings['color.vertices']
+        if (colorPoints) {
+            colorPoints = new THREE.Color(colorPoints.value.red, colorPoints.value.green, colorPoints.value.blue);
+        } else {
+            colorPoints = new THREE.Color(0xffffff);
+        }
+
+        const pointsMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                color: { value: colorPoints },
+                size: { value: 15 },
+            },
+            vertexShader,
+            fragmentShader
+        });
+
+        // const pointsMaterial = new THREE.PointsMaterial({ size: 0.2, color: 0xffffff });
+        const points = new THREE.Points(pointsGeometry, pointsMaterial);
+        points.name = "vertices";
+
+        mesh.add(points);
         mesh.data = data;
         return mesh;
 
@@ -259,3 +304,40 @@ export function generateAttributesView(data) {
     return attributeGroup;
 
 }
+
+const vertexShader = `
+uniform float size;
+// attribute vec3 customColor;
+// varying vec3 vColor;
+
+void main() {
+
+    // vColor = customColor;
+
+    vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+
+    // gl_PointSize = size * ( 300.0 / -mvPosition.z );
+    gl_PointSize = size;
+
+    gl_Position = projectionMatrix * mvPosition;
+
+}
+`
+
+const fragmentShader = `
+// uniform vec3 color;
+//uniform sampler2D pointTexture;
+//uniform float alphaTest;
+
+//varying vec3 vColor;
+
+void main() {
+
+    gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 );
+
+    //gl_FragColor = gl_FragColor * texture2D( pointTexture, gl_PointCoord );
+
+    if ( pow(gl_PointCoord.x - 0.5, 2.0) + pow(gl_PointCoord.y - 0.5, 2.0) > 0.25 ) discard;
+
+}
+`

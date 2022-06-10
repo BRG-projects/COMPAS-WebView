@@ -49,6 +49,8 @@ class Three {
       color: 0xffffff,
     });
     this.enableTransformControls = false;
+    this.mode = "Scene";
+    this.editingObj = null;
   }
 
   setup(refs) {
@@ -167,6 +169,26 @@ class Three {
     window.three.camera.aspect = width / height;
     window.three.camera.updateProjectionMatrix();
   }
+
+  editAttributes(obj) {
+    this.select(null);
+    this.objectsGroup.children.forEach((child) => {
+      child._visible = child.visible;
+      child.visible = false;
+    });
+    console.log(obj);
+    obj.visible = true;
+    this.editingObj = obj;
+    this.mode = "Attributes";
+  }
+
+  exitEditAttributes() {
+    this.objectsGroup.children.forEach((child) => {
+      child.visible = true;
+    });
+    this.editingObj = null;
+    this.mode = "Scene";
+  }
 }
 
 export default {
@@ -189,18 +211,25 @@ export default {
     },
     onMouseDown() {
       this.three.raycaster.setFromCamera(this.three.pointer, this.three.camera);
-      let intersects = this.three.raycaster.intersectObjects(
-        this.three.interactiveGroup.children
-      );
-      intersects = intersects.filter(
-        (intersect) => intersect.object.type === "Mesh"
-      );
-      if (intersects.length > 0) {
-        console.log("raytrace intersects", intersects);
-        const obj = intersects[0].object;
-        this.three.select(obj);
-      } else {
-        this.three.select();
+      if (this.three.mode === "Scene") {
+        let intersects = this.three.raycaster.intersectObjects(
+          this.three.interactiveGroup.children
+        );
+        intersects = intersects.filter(
+          (intersect) => intersect.object.type === "Mesh"
+        );
+        if (intersects.length > 0) {
+          console.log("raytrace intersects", intersects);
+          const obj = intersects[0].object;
+          this.three.select(obj);
+        } else {
+          this.three.select();
+        }
+      } else if (this.three.mode === "Attributes") {
+        this.three.editingObj.children.forEach((attributeObject) => {
+          let intersects = this.three.raycaster.intersectObject(attributeObject);
+          console.log(intersects)
+        });
       }
     },
   },
