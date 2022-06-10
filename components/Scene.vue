@@ -191,7 +191,6 @@ export default {
     getItem(id) {
       let found = {};
       let findItem = (parent, id, found) => {
-        console.log("CHECKING", id);
         if (parent.id == id) {
           found.item = parent;
         } else if (parent.children) {

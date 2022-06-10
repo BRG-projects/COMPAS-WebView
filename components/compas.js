@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-export default function compasToThree(data) {
+export default function compasToThree(data, settings={}) {
 
     console.log("toThree", data);
 
@@ -84,7 +84,15 @@ export default function compasToThree(data) {
         const geometry = new THREE.BufferGeometry();
         geometry.setAttribute("position", position);
         geometry.setAttribute("normal", normal);
-        const material = new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, color: 0x0092D2, flatShading: false });
+
+        let colorFaces = settings['color.faces']
+        if (colorFaces){
+            colorFaces = new THREE.Color(colorFaces.value.red, colorFaces.value.green, colorFaces.value.blue);
+        }else{
+            colorFaces = new THREE.Color(0x0092D2);
+        }
+
+        const material = new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, color: colorFaces, flatShading: false });
         const mesh = new THREE.Mesh(geometry, material);
 
         lines = lines.flat()
@@ -93,7 +101,14 @@ export default function compasToThree(data) {
         const lineGeometry = new THREE.BufferGeometry();
         lineGeometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(lines.flat()), 3));
 
-        const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+        let colorEdges = settings['color.edges']
+        if (colorEdges){
+            colorEdges = new THREE.Color(colorEdges.value.red, colorEdges.value.green, colorEdges.value.blue);
+        }else{
+            colorEdges = new THREE.Color(0xffffff);
+        }
+
+        const lineMaterial = new THREE.LineBasicMaterial({ color: colorEdges });
         const lineSegments = new THREE.LineSegments(lineGeometry, lineMaterial);
         mesh.add(lineSegments)
         mesh.data = data;

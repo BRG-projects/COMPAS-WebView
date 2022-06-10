@@ -21,6 +21,7 @@
             'DragonAttenuation.glb',
             'InterpolationTest.glb',
             'tubemesh.json',
+            'viewobjects.json'
           ]"
         ></v-select>
       </v-list-item-content>
@@ -196,10 +197,19 @@ export default {
             break;
 
           case "json":
-            let obj = compasToThree(content);
+            console.log("json", content);
+            if (Array.isArray(content)){
+              content.forEach(function(obj){
+                let mesh = compasToThree(obj.data, obj.settings);
+                three.objectsGroup.add(mesh);
+              });
+            }else{
+              let obj = compasToThree(content);
             if (obj) {
               three.objectsGroup.add(obj);
             }
+            }
+            
             break;
 
           default:
