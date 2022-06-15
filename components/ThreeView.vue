@@ -44,12 +44,13 @@ class Three {
     this.selected = null;
     this.pointer = new THREE.Vector2();
     this.raycaster = new THREE.Raycaster();
-    this.raycaster.params.Line.threshold = 3;
+    this.raycaster.params.Line.threshold = 0.5;
     this.edgeMaterial = new THREE.LineBasicMaterial({
       color: 0xffffff,
     });
     this.enableTransformControls = false;
     this.mode = "Scene";
+    this.attributeMode = "vertices";
     this.editingObj = null;
   }
 
@@ -227,8 +228,25 @@ export default {
         }
       } else if (this.three.mode === "Attributes") {
         this.three.editingObj.children.forEach((attributeObject) => {
-          let intersects = this.three.raycaster.intersectObject(attributeObject);
-          console.log(intersects)
+          attributeObject.selectAttribute(-1);
+          if (attributeObject.name === this.three.attributeMode) {
+            let intersects =
+              this.three.raycaster.intersectObject(attributeObject);
+            if (intersects.length) {
+              // intersects.forEach((intersect) => {
+              //   const geometry = new THREE.SphereGeometry(0.5);
+              //   const material = new THREE.MeshBasicMaterial({
+              //     color: 0xffff00,
+              //   });
+              //   const sphere = new THREE.Mesh(geometry, material);
+              //   sphere.position.copy(intersect.point);
+              //   this.three.editingObj.add(sphere);
+              //   this.three.selectAttribute(attributeObject, intersect.index);
+              // });
+              console.log(intersects)
+              attributeObject.selectAttribute(intersects[0].index || intersects[0].faceIndex);
+            }
+          }
         });
       }
     },

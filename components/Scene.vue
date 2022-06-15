@@ -42,13 +42,22 @@
             mdi-crosshairs
           </v-icon>
           <v-icon v-if="getObject(item.id).data" @click="editAttributes(item)">
-            mdi-cog
+            mdi-graph
           </v-icon>
         </template>
       </v-treeview>
     </v-card>
 
-    <v-btn class="my-2" v-if="mode==='Attributes'" @click="exitEditAttributes()">Exit Edit Attributes</v-btn>
+    <div v-if="mode === 'Attributes'">
+      <v-radio-group v-model="attributeMode">
+        <v-radio value="vertices" label="vertices"></v-radio>
+        <v-radio value="edges" label="edges"></v-radio>
+        <v-radio value="faces" label="faces"></v-radio>
+      </v-radio-group>
+      <v-btn class="my-2" @click="exitEditAttributes()"
+        >Exit Edit Attributes</v-btn
+      >
+    </div>
 
     <v-divider class="my-5"></v-divider>
 
@@ -86,9 +95,9 @@ export default {
       return (document.body.clientHeight - 48) / 2;
     },
 
-    mode(){
-      if(three) return three.mode;
-    }
+    mode() {
+      if (three) return three.mode;
+    },
   },
 
   data() {
@@ -104,16 +113,21 @@ export default {
         AxesHelper: "mdi-axis",
         GridHelper: "mdi-axis",
         LineSegments: "mdi-vector-line",
-        Points: "mdi-square-medium-outline"
+        Points: "mdi-square-medium-outline",
       },
       activated: [],
       attributeEditingObject: null,
+      attributeMode: "vertices",
     };
   },
 
   watch: {
     selected() {
       this.updateActivated();
+    },
+
+    attributeMode(value){
+      three.attributeMode = value;
     },
   },
 
