@@ -44,11 +44,14 @@ class Three {
     this.selected = null;
     this.pointer = new THREE.Vector2();
     this.raycaster = new THREE.Raycaster();
-    this.raycaster.params.Line.threshold = 3;
+    // this.raycaster.params.Line.threshold = 0.5;
     this.edgeMaterial = new THREE.LineBasicMaterial({
       color: 0xffffff,
     });
     this.enableTransformControls = false;
+    this.mode = "Scene";
+    this.attributeMode = "vertices";
+    this.editingObj = null;
   }
 
   setup(refs) {
@@ -167,6 +170,32 @@ class Three {
     window.three.camera.aspect = width / height;
     window.three.camera.updateProjectionMatrix();
   }
+
+  editAttributes(obj) {
+    this.select(null);
+    this.objectsGroup.children.forEach((child) => {
+      child._visible = child.visible;
+      child.visible = false;
+    });
+    console.log("Editing attributes:", obj);
+    obj.visible = true;
+    this.editingObj = obj;
+    obj.children.forEach((child) => (child.visible = true));
+    this.mode = "Attributes";
+    this.focus(obj);
+  }
+
+  exitEditAttributes() {
+    this.objectsGroup.children.forEach((child) => {
+      child.visible = child._visible;
+    });
+    this.editingObj.children.forEach((child) => {
+      child.selectAttribute(-1);
+      if (child.name === "vertices") child.visible = false;
+    });
+    this.editingObj = null;
+    this.mode = "Scene";
+  }
 }
 
 export default {
@@ -189,18 +218,47 @@ export default {
     },
     onMouseDown() {
       this.three.raycaster.setFromCamera(this.three.pointer, this.three.camera);
-      let intersects = this.three.raycaster.intersectObjects(
-        this.three.interactiveGroup.children
-      );
-      intersects = intersects.filter(
-        (intersect) => intersect.object.type === "Mesh"
-      );
-      if (intersects.length > 0) {
-        console.log("raytrace intersects", intersects);
-        const obj = intersects[0].object;
-        this.three.select(obj);
-      } else {
-        this.three.select();
+      if (this.three.mode === "Scene") {
+        let intersects = this.three.raycaster.intersectObjects(
+          this.three.interactiveGroup.children
+        );
+        intersects = intersects.filter(
+          (intersect) => intersect.object.type === "Mesh"
+        );
+        if (intersects.length > 0) {
+          console.log("raytrace intersects", intersects);
+          let obj = intersects[0].object;
+          if (obj.isAttributes) obj = obj.parent;
+          this.three.select(obj);
+        } else {
+          this.three.select();
+        }
+      } else if (this.three.mode === "Attributes") {
+        this.three.editingObj.children.forEach((attributeObject) => {
+          if (!attributeObject.isAttributes) return;
+          attributeObject.selectAttribute(-1);
+          if (attributeObject.name === this.three.attributeMode) {
+            this.three.raycaster.params.Points.threshold =
+              this.three.raycaster.params.Line.threshold =
+                this.three.editingObj.raycastThreshold;
+            let intersects =
+              this.three.raycaster.intersectObject(attributeObject);
+            if (intersects.length) {
+              // intersects.forEach((intersect) => {
+              //   const geometry = new THREE.SphereGeometry(0.01);
+              //   const material = new THREE.MeshBasicMaterial({
+              //     color: 0xffff00,
+              //   });
+              //   const sphere = new THREE.Mesh(geometry, material);
+              //   sphere.position.copy(intersect.point);
+              //   this.three.editingObj.add(sphere);
+              // });
+              attributeObject.selectAttribute(
+                intersects[0].index || intersects[0].faceIndex
+              );
+            }
+          }
+        });
       }
     },
   },
