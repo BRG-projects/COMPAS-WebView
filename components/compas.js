@@ -14,8 +14,9 @@ export default function compasToThree(data, settings = {}) {
 
         let vertices = [];
         let normals = [];
-        // let lines = [];
         let edges = {};
+        const triangleFaceMapping = {};
+        const compasFaceMapping = {}
 
         const pA = new THREE.Vector3(),
             pB = new THREE.Vector3(),
@@ -25,7 +26,9 @@ export default function compasToThree(data, settings = {}) {
         const cb = new THREE.Vector3(),
             ab = new THREE.Vector3(),
             cd = new THREE.Vector3(),
-            ad = new THREE.Vector3();
+            ad = new THREE.Vector3(),
+            ac = new THREE.Vector3(),
+            bd = new THREE.Vector3();
 
         let addEdge = (a, b) => {
             let key1 = [a + "," + b];
@@ -35,14 +38,11 @@ export default function compasToThree(data, settings = {}) {
             }
         }
 
-        for (const [_, face] of Object.entries(data.value.face)) {
+        let triangleIndex = 0;
+
+        for (const [key, face] of Object.entries(data.value.face)) {
             if (face.length === 4) {
-                vertices.push(data.value.vertex[face[0]]);
-                vertices.push(data.value.vertex[face[1]]);
-                vertices.push(data.value.vertex[face[2]]);
-                vertices.push(data.value.vertex[face[2]]);
-                vertices.push(data.value.vertex[face[3]]);
-                vertices.push(data.value.vertex[face[0]]);
+
 
                 pA.copy(data.value.vertex[face[0]]);
                 pB.copy(data.value.vertex[face[1]]);
@@ -62,15 +62,34 @@ export default function compasToThree(data, settings = {}) {
 
                 for (let i = 0; i < 6; i++) normals.push(cb.clone());
 
-                // lines.push([pA.clone(), pB.clone()]);
-                // lines.push([pB.clone(), pC.clone()]);
-                // lines.push([pC.clone(), pD.clone()]);
-                // lines.push([pD.clone(), pA.clone()]);
+                ac.subVectors(pA, pC);
+                bd.subVectors(pB, pD);
+
+                if (ac.lengthSq() < bd.lengthSq()) {
+                    vertices.push(data.value.vertex[face[0]]);
+                    vertices.push(data.value.vertex[face[1]]);
+                    vertices.push(data.value.vertex[face[2]]);
+                    vertices.push(data.value.vertex[face[2]]);
+                    vertices.push(data.value.vertex[face[3]]);
+                    vertices.push(data.value.vertex[face[0]]);
+                } else {
+                    vertices.push(data.value.vertex[face[3]]);
+                    vertices.push(data.value.vertex[face[0]]);
+                    vertices.push(data.value.vertex[face[1]]);
+                    vertices.push(data.value.vertex[face[1]]);
+                    vertices.push(data.value.vertex[face[2]]);
+                    vertices.push(data.value.vertex[face[3]]);
+                }
 
                 addEdge(face[0], face[1]);
                 addEdge(face[1], face[2]);
                 addEdge(face[2], face[3]);
                 addEdge(face[3], face[0]);
+
+                compasFaceMapping[key] = [triangleIndex, triangleIndex + 1]
+                triangleFaceMapping[triangleIndex] = key
+                triangleFaceMapping[triangleIndex + 1] = key
+                triangleIndex += 2;
 
             } else if (face.length === 3) {
                 vertices.push(data.value.vertex[face[0]]);
@@ -88,13 +107,13 @@ export default function compasToThree(data, settings = {}) {
 
                 for (let i = 0; i < 3; i++) normals.push(cb.clone());
 
-                // lines.push([pA.clone(), pB.clone()]);
-                // lines.push([pB.clone(), pC.clone()]);
-                // lines.push([pC.clone(), pA.clone()]);
-
                 addEdge(face[0], face[1]);
                 addEdge(face[1], face[2]);
                 addEdge(face[2], face[0]);
+
+                compasFaceMapping[key] = [triangleIndex]
+                triangleFaceMapping[triangleIndex] = key
+                triangleIndex += 1;
 
             }
         }
@@ -122,19 +141,33 @@ export default function compasToThree(data, settings = {}) {
         const material = new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, color: 0xffffff, flatShading: false, vertexColors: true });
         const faces = new THREE.Mesh(geometry, material);
         faces.name = "faces";
+        faces.isAttributes = true;
+        faces.lastSelected = null;
 
         faces.selectAttribute = (index) => {
-            console.log("selectFace", index);
-            // if (index >= 0){
-            //     for (let vi=0; vi<3; vi++) {
-            //         faces.geometry.attributes.color.array[index*9+vi*3] = 1;
-            //         faces.geometry.attributes.color.array[index*9+vi*3+1] = 1;
-            //         faces.geometry.attributes.color.array[index*9+vi*3+2] = 0;
-            //     }
-            // }else{
-            //     faces.geometry.attributes.color.array.fill(1);
-            // }
-            // faces.geometry.attributes.color.needsUpdate = true;
+            let changeColor = (index, r, g, b) => {
+                const compasFaceIndex = triangleFaceMapping[index];
+                const triangleFaceIndexes = compasFaceMapping[compasFaceIndex];
+                triangleFaceIndexes.forEach(ti => {
+                    for (let vi = 0; vi < 3; vi++) {
+                        faces.geometry.attributes.color.array[ti * 9 + vi * 3] = r;
+                        faces.geometry.attributes.color.array[ti * 9 + vi * 3 + 1] = g;
+                        faces.geometry.attributes.color.array[ti * 9 + vi * 3 + 2] = b;
+                    }
+                })
+            }
+
+            if (faces.lastSelected !== null) {
+                changeColor(faces.lastSelected, colorFaces.r, colorFaces.g, colorFaces.b);
+            }
+
+            if (index >= 0) {
+                changeColor(index, 1, 1, 0);
+                faces.lastSelected = index;
+            } else {
+                faces.lastSelected = null;
+            }
+            faces.geometry.attributes.color.needsUpdate = true;
         }
 
         mesh.add(faces);
@@ -149,9 +182,14 @@ export default function compasToThree(data, settings = {}) {
 
         // lines = lines.flat()
         let lines = [];
+        let avgLineLength = 0;
         for (let [_, line] of Object.entries(edges)) {
             lines.push(data.value.vertex[line[0]], data.value.vertex[line[1]]);
+            avgLineLength += new THREE.Vector3().subVectors(data.value.vertex[line[0]], data.value.vertex[line[1]]).length();
         }
+        avgLineLength /= lines.length;
+        mesh.raycastThreshold = avgLineLength / 5;
+
         lines = lines.map(v => [v.x, v.y, v.z]);
         let vertexColors = lines.map(v => [colorEdges.r, colorEdges.g, colorEdges.b]);
 
@@ -171,32 +209,33 @@ export default function compasToThree(data, settings = {}) {
         // lineSegments.computeLineDistances()
         const lineSegments = new THREE.LineSegments(lineGeometry, lineMaterial);
         lineSegments.name = "edges";
-        lineSegments.colorEges = colorEdges;
-        lineSegments.selectAttribute = (index) => {
-            // let line = lineSegments.geometry.attributes.position.array.slice((index) * 3, (index) * 3 + 6);
-            // console.log(line)
+        lineSegments.isAttributes = true;
+        lineSegments.lastSelected = null;
 
-            // let geometry = new THREE.BufferGeometry();
-            // geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(line), 3));
-            // let material = new THREE.LineBasicMaterial({ color: new THREE.Color(0xffff00), linewidth: 10 });
-            // let selectedLineView = new THREE.Line(geometry, material);
-            // lineSegments.add(selectedLineView)
+        lineSegments.selectAttribute = (index) => {
+
+            let changeColor = (index, r, g, b) => {
+                lineSegments.geometry.attributes.color.array[index * 3] = r;
+                lineSegments.geometry.attributes.color.array[index * 3 + 1] = g;
+                lineSegments.geometry.attributes.color.array[index * 3 + 2] = b;
+                lineSegments.geometry.attributes.color.array[index * 3 + 3] = r;
+                lineSegments.geometry.attributes.color.array[index * 3 + 4] = g;
+                lineSegments.geometry.attributes.color.array[index * 3 + 5] = b;
+            }
+
+            if (lineSegments.lastSelected !== null) {
+                changeColor(lineSegments.lastSelected, colorEdges.r, colorEdges.g, colorEdges.b);
+            }
 
             if (index >= 0) {
-                lineSegments.geometry.attributes.color.array[index * 3] = 1;
-                lineSegments.geometry.attributes.color.array[index * 3 + 1] = 1;
-                lineSegments.geometry.attributes.color.array[index * 3 + 2] = 0;
-                lineSegments.geometry.attributes.color.array[index * 3 + 3] = 1;
-                lineSegments.geometry.attributes.color.array[index * 3 + 4] = 1;
-                lineSegments.geometry.attributes.color.array[index * 3 + 5] = 0;
+                changeColor(index, 1, 1, 0);
+                lineSegments.lastSelected = index;
             } else {
-                lineSegments.geometry.attributes.color.array.fill(1);
+                lineSegments.lastSelected = null;
             }
 
             lineSegments.geometry.attributes.color.needsUpdate = true;
         }
-
-        console.log(lineSegments)
 
         mesh.add(lineSegments)
 
@@ -233,13 +272,20 @@ export default function compasToThree(data, settings = {}) {
 
         const points = new THREE.Points(pointsGeometry, pointsMaterial);
         points.name = "vertices";
+        points.isAttributes = true;
+        points.lastSelected = null;
 
         points.selectAttribute = (index) => {
             points.geometry.attributes.selected.array.fill(0);
-            if (index >= 0)
+            if (index >= 0) {
                 points.geometry.attributes.selected.array[index] = 1;
+                points.lastSelected = index;
+            } else {
+                points.lastSelected = null;
+            }
             points.geometry.attributes.selected.needsUpdate = true;
         }
+        points.visible = false;
 
         mesh.add(points);
         mesh.data = data;
