@@ -168,6 +168,20 @@ export default function compasToThree(data, settings = {}) {
                 faces.lastSelected = null;
             }
             faces.geometry.attributes.color.needsUpdate = true;
+
+            let properties = [
+                {
+                  key: "key",
+                  value: triangleFaceMapping[index],
+                },
+                {
+                  key: "data",
+                  value: "faceAttribute",
+                  data: {},
+                },
+              ];
+
+            return properties
         }
 
         mesh.add(faces);
@@ -235,6 +249,8 @@ export default function compasToThree(data, settings = {}) {
             }
 
             lineSegments.geometry.attributes.color.needsUpdate = true;
+
+
         }
 
         mesh.add(lineSegments)
@@ -284,6 +300,20 @@ export default function compasToThree(data, settings = {}) {
                 points.lastSelected = null;
             }
             points.geometry.attributes.selected.needsUpdate = true;
+
+            let properties = [
+                {
+                  key: "key",
+                  value: index,
+                },
+                {
+                  key: "data",
+                  value: "vertexAttribute",
+                  data: data.value.vertex[index],
+                },
+              ];
+
+            return properties
         }
         points.visible = false;
 

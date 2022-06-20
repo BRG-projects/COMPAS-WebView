@@ -36,13 +36,7 @@ export default {
   name: "Property",
   created() {
     this.$root.$on("showProperty", (properties) => {
-      this.show = true;
       this.items = properties;
-    });
-
-    this.$root.$on("hideProperty", () => {
-      this.show = false;
-      this.items = [];
     });
   },
 

@@ -67,7 +67,6 @@
 
 <script>
 import Property from "./Property.vue";
-import { generateAttributesView } from "./compas";
 
 export default {
   name: "Scene",
@@ -126,7 +125,7 @@ export default {
       this.updateActivated();
     },
 
-    attributeMode(value){
+    attributeMode(value) {
       three.attributeMode = value;
     },
   },
@@ -196,7 +195,7 @@ export default {
     },
 
     getObject(id) {
-      let obj;
+      let obj = {};
       three.scene.traverse((child) => {
         if (child.id == id) {
           obj = child;
@@ -224,6 +223,7 @@ export default {
     },
 
     select(activated) {
+      if (this.mode === "Attributes") return;
       if (activated.length === 0) return;
       if (this.selected && this.selected.id === activated[0]) return;
       let obj = this.getObject(activated[0]);

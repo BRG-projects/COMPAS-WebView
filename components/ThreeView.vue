@@ -253,9 +253,11 @@ export default {
               //   sphere.position.copy(intersect.point);
               //   this.three.editingObj.add(sphere);
               // });
-              attributeObject.selectAttribute(
-                intersects[0].index || intersects[0].faceIndex
-              );
+
+              let index = intersects[0].index || intersects[0].faceIndex;
+              let attributeProperties = attributeObject.selectAttribute(index);
+
+              this.$root.$emit("showProperty", attributeProperties || []);
             }
           }
         });
