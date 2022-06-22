@@ -9,8 +9,8 @@ export default {
 
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
-    titleTemplate: '%s - GLTF_viewer',
-    title: 'GLTF_viewer',
+    titleTemplate: '%s - COMPAS-WebView',
+    title: 'COMPAS-WebView',
     htmlAttrs: {
       lang: 'en'
     },
@@ -55,7 +55,7 @@ export default {
   },
 
   router: {
-    base: '/GLTF_viewer/'
+    base: '/COMPAS-WebView/'
   },
 
   // Vuetify module configuration: https://go.nuxtjs.dev/config-vuetify

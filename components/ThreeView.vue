@@ -115,7 +115,7 @@ class Three {
     // let hdri;
     // if (window.location.host.includes("localhost"))
     //   hdri = "/studio_small_08_4k.hdr";
-    // else hdri = "/GLTF_viewer/studio_small_08_4k.hdr";
+    // else hdri = "/COMPAS-WebView/studio_small_08_4k.hdr";
     // new RGBELoader().load(hdri, (texture) => {
     //   texture.mapping = THREE.EquirectangularReflectionMapping;
     //   this.hdri = texture;
@@ -236,7 +236,6 @@ export default {
       } else if (this.three.mode === "Attributes") {
         this.three.editingObj.children.forEach((attributeObject) => {
           if (!attributeObject.isAttributes) return;
-          attributeObject.selectAttribute(-1);
           if (attributeObject.name === this.three.attributeMode) {
             this.three.raycaster.params.Points.threshold =
               this.three.raycaster.params.Line.threshold =
@@ -253,10 +252,14 @@ export default {
               //   sphere.position.copy(intersect.point);
               //   this.three.editingObj.add(sphere);
               // });
-              attributeObject.selectAttribute(
-                intersects[0].index || intersects[0].faceIndex
-              );
+
+              let index = intersects[0].index !== undefined ? intersects[0].index : intersects[0].faceIndex;
+              let attributeProperties = attributeObject.selectAttribute(index);
+
+              this.$root.$emit("showProperty", attributeProperties || []);
             }
+          } else {
+            attributeObject.selectAttribute(-1);
           }
         });
       }

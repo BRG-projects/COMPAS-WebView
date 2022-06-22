@@ -1,4 +1,4 @@
-# GLTF_viewer
+# COMPAS-WebView
 
 ## Build Setup
 
