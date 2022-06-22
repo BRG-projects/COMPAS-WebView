@@ -115,7 +115,7 @@ class Three {
     // let hdri;
     // if (window.location.host.includes("localhost"))
     //   hdri = "/studio_small_08_4k.hdr";
-    // else hdri = "/GLTF_viewer/studio_small_08_4k.hdr";
+    // else hdri = "/COMPAS-WebView/studio_small_08_4k.hdr";
     // new RGBELoader().load(hdri, (texture) => {
     //   texture.mapping = THREE.EquirectangularReflectionMapping;
     //   this.hdri = texture;

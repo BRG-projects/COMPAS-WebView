@@ -149,7 +149,7 @@ export default {
           case "Examples":
             file = this.fileExample;
             if (!window.location.host.includes("localhost"))
-              file = "/GLTF_viewer/" + file;
+              file = "/COMPAS-WebView/" + file;
             ext = file.toLowerCase().split(".").pop();
             content = await this.fetch_file(file, ext);
             break;
