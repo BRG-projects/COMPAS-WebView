@@ -130,10 +130,8 @@ class Three {
       this.outlinePass.selectedObjects = [obj];
       if (this.enableTransformControls) {
         this.transformControls.attach(obj);
-        if (obj.geometry)
-          this.transformControls.position.copy(
-            obj.geometry.boundingSphere.center
-          );
+        const bbox = new THREE.Box3().setFromObject(obj);
+        bbox.getCenter(this.transformControls.position);
       }
     } else {
       this.selected = null;
@@ -253,7 +251,10 @@ export default {
               //   this.three.editingObj.add(sphere);
               // });
 
-              let index = intersects[0].index !== undefined ? intersects[0].index : intersects[0].faceIndex;
+              let index =
+                intersects[0].index !== undefined
+                  ? intersects[0].index
+                  : intersects[0].faceIndex;
               let attributeProperties = attributeObject.selectAttribute(index);
 
               this.$root.$emit("showProperty", attributeProperties || []);
