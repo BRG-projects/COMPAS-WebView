@@ -141,6 +141,7 @@ class Three {
       this.transformControls.attach(obj);
       const bbox = new THREE.Box3().setFromObject(obj);
       bbox.getCenter(this.transformControls.position);
+      this.transformControls.position.sub(obj.position);
     }
   }
 
