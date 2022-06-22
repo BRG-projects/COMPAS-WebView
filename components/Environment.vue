@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <v-container class="pa-5">
     <v-row>
       <v-col>
         <v-radio-group v-model="backgroundColor" label="Background">
@@ -19,11 +19,11 @@
           <v-radio label="Ghosted" value="Ghosted" />
         </v-radio-group>
       </v-col>
-      <v-col>
-        <v-radio-group v-model="gimbal" label="Gimbal">
-          <v-radio label="On" :value="true" />
-          <v-radio label="Off" :value="false" />
-        </v-radio-group>
+    </v-row>
+    <v-row>
+      <v-col cols="12">
+        <v-switch label="Grid" v-model="grid" />
+        <v-switch label="Gimbal" v-model="gimbal" />
       </v-col>
     </v-row>
   </v-container>
@@ -43,6 +43,7 @@ export default {
       backgroundColor: 0x1e1e1e,
       activated: [],
       gimbal: false,
+      grid: true,
     };
   },
 
@@ -80,6 +81,14 @@ export default {
         three.transformControls.detach();
       }
     },
+
+    grid(val){
+      if(val){
+        three.grid.visible = three.axes.visible = true;
+      }else{
+        three.grid.visible = three.axes.visible = false;
+      }
+    }
   },
 
   methods: {

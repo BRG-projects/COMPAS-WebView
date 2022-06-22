@@ -57,7 +57,7 @@ class Three {
   setup(refs) {
     this.refs = refs;
     this.defaultGroup.name = "Default";
-    this.camera.position.set(5, 5, 5);
+    this.camera.position.set(10, 10, 10);
     this.camera.up.set(0, 0, 1);
     this.camera.add(this.pointLight);
     this.defaultGroup.add(this.ambientLight);
