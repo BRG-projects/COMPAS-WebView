@@ -50,7 +50,7 @@ export default {
         },
       ],
       miniVariant: false,
-      title: "GLTF Viewer",
+      title: "COMPAS WebView",
     };
   },
 
