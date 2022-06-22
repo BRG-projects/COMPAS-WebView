@@ -74,7 +74,7 @@ export default {
       if (val) {
         three.enableTransformControls = true;
         if (three.selected) {
-          three.transformControls.attach(three.selected);
+          three.attachGimbal(three.selected);
         }
       } else {
         three.enableTransformControls = false;

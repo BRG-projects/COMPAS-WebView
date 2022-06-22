@@ -128,15 +128,19 @@ class Three {
       this.selected = obj;
       obj.selected = true;
       this.outlinePass.selectedObjects = [obj];
-      if (this.enableTransformControls) {
-        this.transformControls.attach(obj);
-        const bbox = new THREE.Box3().setFromObject(obj);
-        bbox.getCenter(this.transformControls.position);
-      }
+      this.attachGimbal(obj);
     } else {
       this.selected = null;
       this.outlinePass.selectedObjects = [];
       this.transformControls.detach();
+    }
+  }
+
+  attachGimbal(obj) {
+    if (this.enableTransformControls) {
+      this.transformControls.attach(obj);
+      const bbox = new THREE.Box3().setFromObject(obj);
+      bbox.getCenter(this.transformControls.position);
     }
   }
 
