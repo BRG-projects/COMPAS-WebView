@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { vertexShader, fragmentShader } from "../shaders/points";
 // import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
 // import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
 // import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
@@ -16,7 +17,8 @@ export default function compasToThree(data, settings = {}) {
         let normals = [];
         let edges = {};
         const triangleFaceMapping = {};
-        const compasFaceMapping = {}
+        const compasFaceMapping = {};
+        const vertexMapping = {};
 
         const pA = new THREE.Vector3(),
             pB = new THREE.Vector3(),
@@ -39,6 +41,11 @@ export default function compasToThree(data, settings = {}) {
         }
 
         let triangleIndex = 0;
+        
+        let vertexKeys = Object.keys(data.value.vertex)
+        for (let i = 0; i< vertexKeys.length; i++) {
+            vertexMapping[i] = vertexKeys[i]
+        }
 
         for (const [key, face] of Object.entries(data.value.face)) {
             if (face.length === 4) {
@@ -176,10 +183,12 @@ export default function compasToThree(data, settings = {}) {
                 },
                 {
                   key: "data",
-                  value: "faceAttribute",
-                  data: {},
+                  value: "facedata",
+                  data: data.value.facedata[triangleFaceMapping[index]],
                 },
               ];
+
+              console.log(data)
 
             return properties
         }
@@ -304,12 +313,12 @@ export default function compasToThree(data, settings = {}) {
             let properties = [
                 {
                   key: "key",
-                  value: index,
+                  value: vertexMapping[index],
                 },
                 {
                   key: "data",
-                  value: "vertexAttribute",
-                  data: data.value.vertex[index],
+                  value: "vertexdata",
+                  data: data.value.vertex[vertexMapping[index]],
                 },
               ];
 
@@ -324,183 +333,3 @@ export default function compasToThree(data, settings = {}) {
     }
 
 }
-
-export function generateAttributesView(data) {
-
-    const attributeGroup = new THREE.Group();
-    const facesGroup = new THREE.Group();
-    const edgesGroup = new THREE.Group();
-    const verticesGroup = new THREE.Group();
-    facesGroup.name = "faces";
-    edgesGroup.name = "edges";
-    verticesGroup.name = "vertices";
-
-    attributeGroup.add(facesGroup);
-    attributeGroup.add(edgesGroup);
-    attributeGroup.add(verticesGroup);
-
-    const edges = {};
-
-    let addEdge = (a, b) => {
-        let key1 = [a + "," + b];
-        let key2 = [b + "," + a];
-        if (!edges[key1] && !edges[key2]) {
-            edges[key1] = [a, b];
-        }
-    }
-
-
-    for (const [key, face] of Object.entries(data.value.face)) {
-
-        let vertices = [];
-        let normals = [];
-        let lines = [];
-
-        const pA = new THREE.Vector3(),
-            pB = new THREE.Vector3(),
-            pC = new THREE.Vector3(),
-            pD = new THREE.Vector3();
-
-        const cb = new THREE.Vector3(),
-            ab = new THREE.Vector3(),
-            cd = new THREE.Vector3(),
-            ad = new THREE.Vector3();
-
-
-        if (face.length === 4) {
-            vertices.push(data.value.vertex[face[0]]);
-            vertices.push(data.value.vertex[face[1]]);
-            vertices.push(data.value.vertex[face[2]]);
-            vertices.push(data.value.vertex[face[2]]);
-            vertices.push(data.value.vertex[face[3]]);
-            vertices.push(data.value.vertex[face[0]]);
-
-            pA.copy(data.value.vertex[face[0]]);
-            pB.copy(data.value.vertex[face[1]]);
-            pC.copy(data.value.vertex[face[2]]);
-            pD.copy(data.value.vertex[face[3]]);
-
-            cb.subVectors(pC, pB);
-            ab.subVectors(pA, pB);
-            cb.cross(ab);
-
-            cd.subVectors(pD, pC);
-            ad.subVectors(pA, pC);
-            cd.cross(ad);
-
-            cb.add(cd);
-            cb.normalize();
-
-            for (let i = 0; i < 6; i++) normals.push(cb.clone());
-
-            addEdge(face[0], face[1]);
-            addEdge(face[1], face[2]);
-            addEdge(face[2], face[3]);
-            addEdge(face[3], face[0]);
-
-        } else if (face.length === 3) {
-            vertices.push(data.value.vertex[face[0]]);
-            vertices.push(data.value.vertex[face[1]]);
-            vertices.push(data.value.vertex[face[2]]);
-
-            pA.copy(data.value.vertex[face[0]]);
-            pB.copy(data.value.vertex[face[1]]);
-            pC.copy(data.value.vertex[face[2]]);
-
-            cb.subVectors(pC, pB);
-            ab.subVectors(pA, pB);
-            cb.cross(ab);
-            cb.normalize();
-
-            for (let i = 0; i < 3; i++) normals.push(cb.clone());
-
-            addEdge(face[0], face[1]);
-            addEdge(face[1], face[2]);
-            addEdge(face[2], face[3]);
-
-        }
-
-        vertices = vertices.map(v => [v.x, v.y, v.z]);
-        normals = normals.map(n => [n.x, n.y, n.z]);
-
-        let position = new THREE.BufferAttribute(new Float32Array(vertices.flat()), 3);
-        let normal = new THREE.BufferAttribute(new Float32Array(normals.flat()), 3);
-
-        const geometry = new THREE.BufferGeometry();
-        geometry.setAttribute("position", position);
-        geometry.setAttribute("normal", normal);
-        const material = new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, color: 0x0092D2, flatShading: false });
-        const mesh = new THREE.Mesh(geometry, material);
-
-        mesh.name = key;
-
-        facesGroup.add(mesh);
-    }
-
-    for (let [key, vertices] of Object.entries(edges)) {
-        vertices = vertices.map(v => data.value.vertex[v]);
-        const geometry = new THREE.BufferGeometry().setFromPoints(vertices);
-        const material = new THREE.LineBasicMaterial({
-            color: 0xffffff
-        });
-        const line = new THREE.Line(geometry, material);
-        line.name = key;
-        edgesGroup.add(line);
-    }
-
-    for (const [key, v] of Object.entries(data.value.vertex)) {
-
-        let position = new THREE.BufferAttribute(new Float32Array([v.x, v.y, v.z]), 3);
-        const geometry = new THREE.BufferGeometry();
-        geometry.setAttribute("position", position);
-
-        const material = new THREE.PointsMaterial({ size: 0.2, color: 0xffffff });
-        const vertex = new THREE.Points(geometry, material);
-        vertex.name = key;
-
-        verticesGroup.add(vertex);
-    }
-
-
-
-    return attributeGroup;
-
-}
-
-const vertexShader = `
-attribute int selected;
-flat varying int vSelected;
-
-void main() {
-
-    vSelected = selected;
-
-    vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
-
-    if (selected == 1) {
-        gl_PointSize = 20.0;
-    }else{
-        gl_PointSize = 10.0;
-    }
-
-    gl_Position = projectionMatrix * mvPosition;
-
-}
-`
-
-const fragmentShader = `
-uniform vec3 color;
-flat varying int vSelected;
-
-void main() {
-
-    if (vSelected == 1) {
-        gl_FragColor = vec4( 1.0, 1.0, 0.0, 1.0 );
-    }else{
-        gl_FragColor = vec4( color, 1.0 );
-    }
-
-    if ( pow(gl_PointCoord.x - 0.5, 2.0) + pow(gl_PointCoord.y - 0.5, 2.0) > 0.25 ) discard;
-
-}
-`

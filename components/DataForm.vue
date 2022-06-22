@@ -1,11 +1,9 @@
 <template>
   <v-overlay :value="overlay">
-    <v-card light flat max-height="800" class="scroll ml-5">
+    <v-card light flat max-height="800" min-height="100" min-width="500" class="scroll">
       <v-treeview :items="dataView"></v-treeview>
-      <v-card-actions>
-        <v-btn @click="overlay=false">close</v-btn>
-      </v-card-actions>
     </v-card>
+    <v-btn @click="overlay = false" light class="mt-5">close</v-btn>
   </v-overlay>
 </template>
 <script>
