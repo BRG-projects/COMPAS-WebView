@@ -3,6 +3,7 @@
     <v-tabs v-model="tab">
       <v-tab key="File"><v-icon>mdi-folder</v-icon></v-tab>
       <v-tab key="Scene"><v-icon>mdi-file-tree</v-icon></v-tab>
+      <v-tab key="Camera"><v-icon>mdi-camera</v-icon></v-tab>
       <v-tab key="Environment"><v-icon>mdi-earth</v-icon></v-tab>
       <v-tab key="Animation"><v-icon>mdi-motion-play</v-icon></v-tab>
     </v-tabs>
@@ -13,6 +14,9 @@
       </v-tab-item>
       <v-tab-item key="Scene">
         <Scene />
+      </v-tab-item>
+      <v-tab-item key="Camera">
+        <Camera />
       </v-tab-item>
       <v-tab-item key="Environment">
         <Environment />
@@ -30,6 +34,7 @@ import File from "./File.vue";
 import Scene from "./Scene.vue";
 import Environment from "./Environment.vue";
 import Animation from "./Animation.vue";
+import Camera from "./Camera.vue";
 
 export default {
   name: "Controller",
@@ -38,6 +43,7 @@ export default {
     Scene,
     Animation,
     Environment,
+    Camera,
   },
   computed: {
     ...mapState(["showController"]),
