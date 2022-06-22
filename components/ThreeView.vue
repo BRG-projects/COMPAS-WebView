@@ -236,7 +236,6 @@ export default {
       } else if (this.three.mode === "Attributes") {
         this.three.editingObj.children.forEach((attributeObject) => {
           if (!attributeObject.isAttributes) return;
-          attributeObject.selectAttribute(-1);
           if (attributeObject.name === this.three.attributeMode) {
             this.three.raycaster.params.Points.threshold =
               this.three.raycaster.params.Line.threshold =
@@ -254,11 +253,13 @@ export default {
               //   this.three.editingObj.add(sphere);
               // });
 
-              let index = intersects[0].index || intersects[0].faceIndex;
+              let index = intersects[0].index !== undefined ? intersects[0].index : intersects[0].faceIndex;
               let attributeProperties = attributeObject.selectAttribute(index);
 
               this.$root.$emit("showProperty", attributeProperties || []);
             }
+          } else {
+            attributeObject.selectAttribute(-1);
           }
         });
       }

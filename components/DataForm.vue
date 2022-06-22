@@ -13,6 +13,7 @@ export default {
   name: "DataForm",
   created() {
     this.$root.$on("showData", (data) => {
+      console.log(data);
       this.overlay = true;
       this.mapData(data);
     });
@@ -67,7 +68,7 @@ export default {
               name: `${key} : []`,
               children: add_entries(value),
             });
-          } else if (typeof value === "object") {
+          } else if (typeof value === "object" && value) {
             tree.push({
               id: id++,
               name: `${key} : {}`,
