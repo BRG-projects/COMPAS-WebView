@@ -8,7 +8,8 @@
           <v-btn
             small
             outlined
-            class="ml-1"
+            class="ml-1 pa-2"
+            min-width="0"
             :color="showVertices ? 'primary' : null"
             @click="showVertices = !showVertices"
           >
@@ -18,7 +19,8 @@
           <v-btn
             small
             outlined
-            class="ml-1"
+            class="ml-1 pa-2"
+            min-width="0"
             :color="showEdges ? 'primary' : null"
             @click="showEdges = !showEdges"
           >
@@ -27,7 +29,8 @@
           <v-btn
             small
             outlined
-            class="ml-1"
+            class="ml-1 pa-2"
+            min-width="0"
             :color="showFaces ? 'primary' : null"
             @click="showFaces = !showFaces"
           >
@@ -119,7 +122,7 @@ export default {
       this.updateTree();
     });
 
-    this.$root.$on("showAttributes", (names)=>{
+    this.$root.$on("showAttributes", (names) => {
       this.showVertices = names.includes("vertices");
       this.showEdges = names.includes("edges");
       this.showFaces = names.includes("faces");
@@ -377,12 +380,12 @@ export default {
     editAttributes(item) {
       let obj = this.getObject(item.id);
       three.editAttributes(obj);
-      this.$root.$emit("showAttributes", ['vertices', 'edges', 'faces']);
+      this.$root.$emit("showAttributes", ["vertices", "edges", "faces"]);
     },
 
     exitEditAttributes() {
       three.exitEditAttributes();
-      this.$root.$emit("showAttributes", ['faces']);
+      this.$root.$emit("showAttributes", ["faces"]);
     },
   },
 };
