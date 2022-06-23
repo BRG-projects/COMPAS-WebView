@@ -16,10 +16,11 @@
       min="1"
       thumb-label
     ></v-slider>
-    Position
+    <span>Position</span>
     <v-row>
       <v-col>
         <v-text-field
+          dense
           type="number"
           prefix="x"
           outlined
@@ -29,6 +30,7 @@
       </v-col>
       <v-col>
         <v-text-field
+          dense
           type="number"
           prefix="y"
           outlined
@@ -38,6 +40,7 @@
       </v-col>
       <v-col>
         <v-text-field
+          dense
           type="number"
           prefix="z"
           outlined
@@ -47,10 +50,11 @@
       </v-col>
     </v-row>
 
-    Target
+    <span>Target</span>
     <v-row>
       <v-col>
         <v-text-field
+          dense
           type="number"
           prefix="x"
           outlined
@@ -60,6 +64,7 @@
       </v-col>
       <v-col>
         <v-text-field
+          dense
           type="number"
           prefix="y"
           outlined
@@ -69,6 +74,7 @@
       </v-col>
       <v-col>
         <v-text-field
+          dense
           type="number"
           prefix="z"
           outlined
@@ -80,13 +86,21 @@
     <v-row>
       <v-col>
         Views
-        <v-btn block class="my-1" @click="setView('top')">Top</v-btn>
-        <v-btn block class="my-1" @click="setView('bottom')">Bottom</v-btn>
-        <v-btn block class="my-1" @click="setView('front')">Front</v-btn>
-        <v-btn block class="my-1" @click="setView('back')">Back</v-btn>
-        <v-btn block class="my-1" @click="setView('left')">Left</v-btn>
-        <v-btn block class="my-1" @click="setView('right')">Right</v-btn>
-        <v-btn block class="my-1" @click="setView('perspective')">Perspective</v-btn>
+        <v-btn block outlined class="my-1" @click="setView('top')">Top</v-btn>
+        <v-btn block outlined class="my-1" @click="setView('bottom')"
+          >Bottom</v-btn
+        >
+        <v-btn block outlined class="my-1" @click="setView('front')"
+          >Front</v-btn
+        >
+        <v-btn block outlined class="my-1" @click="setView('back')">Back</v-btn>
+        <v-btn block outlined class="my-1" @click="setView('left')">Left</v-btn>
+        <v-btn block outlined class="my-1" @click="setView('right')"
+          >Right</v-btn
+        >
+        <v-btn block outlined class="my-1" @click="setView('perspective')"
+          >Perspective</v-btn
+        >
       </v-col>
     </v-row>
   </v-container>
@@ -141,7 +155,8 @@ export default {
       }
       if (three.objectsGroup.children.length)
         three.controls.fitToSphere(three.objectsGroup);
-      if (lockOrbit) three.controls.mouseButtons.left = CameraControls.ACTION.NONE;
+      if (lockOrbit)
+        three.controls.mouseButtons.left = CameraControls.ACTION.NONE;
       else three.controls.mouseButtons.left = CameraControls.ACTION.ROTATE;
     },
 
