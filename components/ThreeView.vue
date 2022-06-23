@@ -57,10 +57,6 @@ class Three {
     this.selected = null;
     this.pointer = new THREE.Vector2();
     this.raycaster = new THREE.Raycaster();
-    // this.raycaster.params.Line.threshold = 0.5;
-    this.edgeMaterial = new THREE.LineBasicMaterial({
-      color: 0xffffff,
-    });
     this.enableTransformControls = false;
     this.mode = "Scene";
     this.attributeMode = "vertices";

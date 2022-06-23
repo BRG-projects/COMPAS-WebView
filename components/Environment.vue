@@ -17,6 +17,7 @@
         <v-radio-group v-model="viewMode" label="View Mode">
           <v-radio label="Normal" value="Normal" />
           <v-radio label="Ghosted" value="Ghosted" />
+          <v-radio label="Wireframe" value="Wireframe" />
         </v-radio-group>
       </v-col>
     </v-row>
@@ -63,11 +64,44 @@ export default {
     },
 
     viewMode(val) {
-      if (val === "Normal") {
-        three.edgeMaterial.depthTest = true;
-      } else if (val === "Ghosted") {
-        three.edgeMaterial.depthTest = false;
-      }
+      let initViewProperties = (obj) => {
+        if (obj._visible === undefined) {
+          obj._visible = obj.visible;
+        }
+        if (obj.material) {
+          if (obj.material._opacity === undefined) {
+            obj.material._opacity = obj.material.opacity;
+          }
+          if (obj.material._transparent === undefined) {
+            obj.material._transparent = obj.material.transparent;
+          }
+        }
+      };
+      three.objectsGroup.traverse(function (child) {
+        initViewProperties(child);
+        if (val === "Normal" && child.material) {
+          child.material.transparent = child.material._transparent;
+          child.material.opacity = child.material._opacity;
+          child.visible = child._visible;
+        } else if (
+          val === "Ghosted" &&
+          child.type === "Mesh" &&
+          child.material
+        ) {
+          child.visible = child._visible;
+          child.material._transparent = child.material.transparent;
+          child.material._opacity = child.material.opacity;
+          child.material.transparent = true;
+          child.material.opacity = 0.3;
+        } else if (
+          val === "Wireframe" &&
+          child.isAttributes &&
+          child.name === "faces"
+        ) {
+          child._visible = child.visible;
+          child.visible = false;
+        }
+      });
     },
 
     gimbal(val) {
@@ -82,13 +116,13 @@ export default {
       }
     },
 
-    grid(val){
-      if(val){
+    grid(val) {
+      if (val) {
         three.grid.visible = three.axes.visible = true;
-      }else{
+      } else {
         three.grid.visible = three.axes.visible = false;
       }
-    }
+    },
   },
 
   methods: {
