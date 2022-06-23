@@ -1,5 +1,21 @@
 <template>
   <v-container class="pa-5">
+    <v-radio-group
+      :value="cameraType"
+      label="Camera Type"
+      @change="switchCamera"
+    >
+      <v-radio label="Perspective" value="Perspective" />
+      <v-radio label="Orthographic" value="Orthographic" />
+    </v-radio-group>
+    <v-slider
+      v-if="cameraType === 'Perspective'"
+      v-model="fov"
+      label="FOV"
+      max="180"
+      min="1"
+      thumb-label
+    ></v-slider>
     Position
     <v-row>
       <v-col>
@@ -61,14 +77,6 @@
         ></v-text-field>
       </v-col>
     </v-row>
-    <v-slider
-      v-model="fov"
-      label="FOV"
-      max="180"
-      min="1"
-      thumb-label
-    ></v-slider>
-
     <v-row>
       <v-col>
         Views
@@ -78,6 +86,7 @@
         <v-btn block class="my-1" @click="setView('back')">Back</v-btn>
         <v-btn block class="my-1" @click="setView('left')">Left</v-btn>
         <v-btn block class="my-1" @click="setView('right')">Right</v-btn>
+        <v-btn block class="my-1" @click="setView('perspective')">Perspective</v-btn>
       </v-col>
     </v-row>
   </v-container>
@@ -85,12 +94,14 @@
 
 <script>
 import { Vector3, Box3 } from "three";
+import CameraControls from "camera-controls";
 
 export default {
   name: "Camera",
 
   data() {
     return {
+      cameraType: "Perspective",
       fov: null,
       position: new Vector3(),
       target: new Vector3(),
@@ -98,20 +109,47 @@ export default {
   },
 
   mounted() {
-    this.fov = three.camera.fov;
-    this.getPosition();
-    three.controls.addEventListener("update", this.getPosition);
-    three.controls.addEventListener("update", this.getTarget);
+    this.fov = three.perspectiveCamera.fov;
+    this.trackCamera();
   },
 
   watch: {
     fov(val) {
-      three.camera.fov = val;
-      three.camera.updateProjectionMatrix();
+      three.perspectiveCamera.fov = val;
+      three.perspectiveCamera.updateProjectionMatrix();
     },
   },
 
   methods: {
+    switchCamera(val) {
+      if (val !== this.cameraType) {
+        if (val === "Perspective") {
+          three.camera = three.perspectiveCamera;
+        } else if (val === "Orthographic") {
+          three.camera = three.orthographicCamera;
+        }
+        three.camera.add(three.pointLight);
+        three.renderPass.camera = three.camera;
+        three.outlinePass.renderCamera = three.camera;
+        three.controls.dispose();
+        three.controls = new CameraControls(
+          three.camera,
+          three.renderer.domElement
+        );
+        this.trackCamera();
+        this.cameraType = val;
+      }
+      if (three.objectsGroup.children.length)
+        three.controls.fitToSphere(three.objectsGroup);
+    },
+
+    trackCamera() {
+      this.getPosition();
+      this.getTarget();
+      three.controls.addEventListener("update", this.getPosition);
+      three.controls.addEventListener("update", this.getTarget);
+    },
+
     getPosition() {
       three.controls.getPosition(this.position);
       this.position.x = Number(this.position.x.toFixed(3));
@@ -158,46 +196,55 @@ export default {
       }
       switch (view) {
         case "top":
+          this.switchCamera("Orthographic");
           this.position.set(
             this.target.x,
             this.target.y,
-            this.target.z + size.z * 5 
+            this.target.z + size.z
           );
           break;
         case "bottom":
+          this.switchCamera("Orthographic");
           this.position.set(
             this.target.x,
             this.target.y,
-            this.target.z - size.z * 5 
+            this.target.z - size.z
           );
           break;
         case "front":
+          this.switchCamera("Orthographic");
           this.position.set(
             this.target.x,
-            this.target.y + size.y * 1,
+            this.target.y + size.y,
             this.target.z
           );
           break;
         case "back":
+          this.switchCamera("Orthographic");
           this.position.set(
             this.target.x,
-            this.target.y - size.y * 1,
+            this.target.y - size.y,
             this.target.z
           );
           break;
         case "left":
+          this.switchCamera("Orthographic");
           this.position.set(
-            this.target.x - size.x * 1,
+            this.target.x - size.x,
             this.target.y,
             this.target.z
           );
           break;
         case "right":
+          this.switchCamera("Orthographic");
           this.position.set(
-            this.target.x + size.x * 1,
+            this.target.x + size.x,
             this.target.y,
             this.target.z
           );
+          break;
+        case "perspective":
+          this.switchCamera("Perspective");
           break;
       }
 

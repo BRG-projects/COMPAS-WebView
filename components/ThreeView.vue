@@ -21,12 +21,25 @@ CameraControls.install({ THREE });
 class Three {
   constructor() {
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(
+    this.perspectiveCamera = new THREE.PerspectiveCamera(
       75,
       window.innerWidth / window.innerHeight,
-      0.1,
+      0.0001,
       1000
     );
+    this.perspectiveCamera.position.set(10, 10, 10);
+    this.perspectiveCamera.up.set(0, 0, 1);
+    this.orthographicCamera = new THREE.OrthographicCamera(
+      window.innerWidth / -2,
+      window.innerWidth / 2,
+      window.innerHeight / 2,
+      window.innerHeight / -2,
+      0.0001,
+      1000
+    );
+    this.orthographicCamera.position.set(10, 10, 10);
+    this.orthographicCamera.up.set(0, 0, 1);
+    this.camera = this.perspectiveCamera;
     this.controls = null;
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.pointLight = new THREE.PointLight(0xffffff, 0.5, 100);
@@ -57,11 +70,10 @@ class Three {
   setup(refs) {
     this.refs = refs;
     this.defaultGroup.name = "Default";
-    this.camera.position.set(10, 10, 10);
-    this.camera.up.set(0, 0, 1);
     this.camera.add(this.pointLight);
     this.defaultGroup.add(this.ambientLight);
-    this.defaultGroup.add(this.camera);
+    this.defaultGroup.add(this.perspectiveCamera);
+    this.defaultGroup.add(this.orthographicCamera);
 
     this.axes.geometry.attributes.position.count = 4;
     this.axes.material.depthTest = false;
@@ -92,8 +104,8 @@ class Three {
 
     this.composer = new EffectComposer(this.renderer);
 
-    const renderPass = new RenderPass(this.scene, this.camera);
-    this.composer.addPass(renderPass);
+    this.renderPass = new RenderPass(this.scene, this.camera);
+    this.composer.addPass(this.renderPass);
 
     this.outlinePass = new OutlinePass(
       new THREE.Vector2(window.innerWidth, window.innerHeight),
@@ -166,12 +178,19 @@ class Three {
   }
 
   updateDimensions() {
-    let width = window.three.refs.container.clientWidth;
-    let height = window.three.refs.container.clientHeight;
-    window.three.renderer.setSize(width, height);
-    window.three.composer.setSize(width, height);
-    window.three.camera.aspect = width / height;
-    window.three.camera.updateProjectionMatrix();
+    let width = three.refs.container.clientWidth;
+    let height = three.refs.container.clientHeight;
+    three.renderer.setSize(width, height);
+    three.composer.setSize(width, height);
+    if (three.camera === three.perspectiveCamera) {
+      three.camera.aspect = width / height;
+    } else if (three.camera === three.orthographicCamera) {
+      three.camera.left = -width / 2;
+      three.camera.right = width / 2;
+      three.camera.top = height / 2;
+      three.camera.bottom = -height / 2;
+    }
+    three.camera.updateProjectionMatrix();
   }
 
   editAttributes(obj) {
