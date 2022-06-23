@@ -43,7 +43,7 @@ export default {
       useHdri: false,
       upAxis: "Z",
       viewMode: "Normal",
-      backgroundColor: 0x1e1e1e,
+      backgroundColor: 0xeeeeee,
       activated: [],
       gimbal: false,
       grid: true,

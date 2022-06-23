@@ -84,7 +84,7 @@ class Three {
     this.interactiveGroup.add(this.objectsGroup);
     this.scene.add(this.interactiveGroup);
 
-    this.scene.background = new THREE.Color(0x1e1e1e);
+    this.scene.background = new THREE.Color(0xeeeeee);
     this.refs.canvas.appendChild(this.renderer.domElement);
     this.controls = new CameraControls(this.camera, this.renderer.domElement);
     this.transformControls = new TransformControls(
