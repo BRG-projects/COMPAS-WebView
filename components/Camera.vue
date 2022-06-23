@@ -121,14 +121,14 @@ export default {
   },
 
   methods: {
-    switchCamera(val) {
+    switchCamera(val, lockOrbit) {
       if (val !== this.cameraType) {
         if (val === "Perspective") {
           three.camera = three.perspectiveCamera;
         } else if (val === "Orthographic") {
           three.camera = three.orthographicCamera;
         }
-        three.camera.add(three.pointLight);
+        // three.camera.add(three.pointLight);
         three.renderPass.camera = three.camera;
         three.outlinePass.renderCamera = three.camera;
         three.controls.dispose();
@@ -141,6 +141,8 @@ export default {
       }
       if (three.objectsGroup.children.length)
         three.controls.fitToSphere(three.objectsGroup);
+      if (lockOrbit) three.controls.mouseButtons.left = CameraControls.ACTION.NONE;
+      else three.controls.mouseButtons.left = CameraControls.ACTION.ROTATE;
     },
 
     trackCamera() {
@@ -196,7 +198,7 @@ export default {
       }
       switch (view) {
         case "top":
-          this.switchCamera("Orthographic");
+          this.switchCamera("Orthographic", true);
           this.position.set(
             this.target.x,
             this.target.y,
@@ -204,7 +206,7 @@ export default {
           );
           break;
         case "bottom":
-          this.switchCamera("Orthographic");
+          this.switchCamera("Orthographic", true);
           this.position.set(
             this.target.x,
             this.target.y,
@@ -212,7 +214,7 @@ export default {
           );
           break;
         case "front":
-          this.switchCamera("Orthographic");
+          this.switchCamera("Orthographic", true);
           this.position.set(
             this.target.x,
             this.target.y + size.y,
@@ -220,7 +222,7 @@ export default {
           );
           break;
         case "back":
-          this.switchCamera("Orthographic");
+          this.switchCamera("Orthographic", true);
           this.position.set(
             this.target.x,
             this.target.y - size.y,
@@ -228,7 +230,7 @@ export default {
           );
           break;
         case "left":
-          this.switchCamera("Orthographic");
+          this.switchCamera("Orthographic", true);
           this.position.set(
             this.target.x - size.x,
             this.target.y,
@@ -236,7 +238,7 @@ export default {
           );
           break;
         case "right":
-          this.switchCamera("Orthographic");
+          this.switchCamera("Orthographic", true);
           this.position.set(
             this.target.x + size.x,
             this.target.y,
