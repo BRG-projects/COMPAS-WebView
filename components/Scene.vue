@@ -1,51 +1,90 @@
 <template>
   <v-container>
-    <v-card class="scroll" outlined :height="halfHeight">
-      <v-card-title>{{ mode }}</v-card-title>
-      <v-treeview
-        :items="tree"
-        dense
-        hoverable
-        :active="activated"
-        :open="opened"
-        @update:open="onOpen"
-        @update:active="select"
-      >
-        <template v-slot:prepend="{ item }">
-          <v-icon>
-            {{ icons[item.type] }}
-          </v-icon>
-        </template>
-        <template v-slot:label="{ item }">
-          <span
-            class="pointer"
-            :ref="`label_${item.id}`"
-            @click.prevent="activate(item)"
+    <v-card outlined>
+      <v-card-title>
+        <v-row class="ma-1">
+          {{ mode }}
+          <v-spacer></v-spacer>
+          <v-btn
+            small
+            outlined
+            class="ml-1"
+            :color="showVertices ? 'primary' : null"
+            @click="showVertices = !showVertices"
           >
-            {{ item.name }}
-          </span>
-        </template>
-        <template v-slot:append="{ item }">
-          <v-icon @click="toggleVisibility(item)">
-            {{ item.visible ? "mdi-eye" : "mdi-eye-off" }}
-          </v-icon>
-          <v-icon
-            v-if="item.name !== 'Default' && item.name !== 'GLTFs'"
-            @click="remove(item)"
+            <v-icon small> mdi-square-medium-outline </v-icon>
+          </v-btn>
+
+          <v-btn
+            small
+            outlined
+            class="ml-1"
+            :color="showEdges ? 'primary' : null"
+            @click="showEdges = !showEdges"
           >
-            mdi-delete
-          </v-icon>
-          <v-icon
-            v-if="item.name !== 'Default' && item.name !== 'GLTFs'"
-            @click.prevent="focus(item)"
+            <v-icon small> mdi-vector-line </v-icon>
+          </v-btn>
+          <v-btn
+            small
+            outlined
+            class="ml-1"
+            :color="showFaces ? 'primary' : null"
+            @click="showFaces = !showFaces"
           >
-            mdi-crosshairs
-          </v-icon>
-          <v-icon v-if="getObject(item.id).data" @click="editAttributes(item)">
-            mdi-graph
-          </v-icon>
-        </template>
-      </v-treeview>
+            <v-icon small> mdi-vector-triangle </v-icon>
+          </v-btn>
+        </v-row>
+      </v-card-title>
+
+      <v-card class="scroll" :height="halfHeight" flat>
+        <v-treeview
+          :items="tree"
+          dense
+          hoverable
+          :active="activated"
+          :open="opened"
+          @update:open="onOpen"
+          @update:active="select"
+        >
+          <template v-slot:prepend="{ item }">
+            <v-icon>
+              {{ icons[item.type] }}
+            </v-icon>
+          </template>
+          <template v-slot:label="{ item }">
+            <span
+              class="pointer"
+              :ref="`label_${item.id}`"
+              @click.prevent="activate(item)"
+            >
+              {{ item.name }}
+            </span>
+          </template>
+          <template v-slot:append="{ item }">
+            <v-icon @click="toggleVisibility(item)">
+              {{ item.visible ? "mdi-eye" : "mdi-eye-off" }}
+            </v-icon>
+            <v-icon
+              v-if="item.name !== 'Default' && item.name !== 'GLTFs'"
+              @click="remove(item)"
+            >
+              mdi-delete
+            </v-icon>
+            <v-icon
+              v-if="item.name !== 'Default' && item.name !== 'GLTFs'"
+              @click.prevent="focus(item)"
+            >
+              mdi-crosshairs
+            </v-icon>
+            <v-icon
+              v-if="getObject(item.id).data"
+              @click="editAttributes(item)"
+            >
+              mdi-graph
+            </v-icon>
+          </template>
+        </v-treeview>
+      </v-card>
     </v-card>
 
     <div v-if="mode === 'Attributes'">
@@ -78,6 +117,12 @@ export default {
   created() {
     this.$root.$on("updateTree", () => {
       this.updateTree();
+    });
+
+    this.$root.$on("showAttributes", (names)=>{
+      this.showVertices = names.includes("vertices");
+      this.showEdges = names.includes("edges");
+      this.showFaces = names.includes("faces");
     });
   },
 
@@ -115,8 +160,10 @@ export default {
         Points: "mdi-square-medium-outline",
       },
       activated: [],
-      attributeEditingObject: null,
       attributeMode: "vertices",
+      showVertices: false,
+      showEdges: false,
+      showFaces: true,
     };
   },
 
@@ -128,6 +175,18 @@ export default {
     attributeMode(value) {
       three.attributeMode = value;
     },
+
+    showVertices(value) {
+      this.showAttributes("vertices", value);
+    },
+
+    showEdges(value) {
+      this.showAttributes("edges", value);
+    },
+
+    showFaces(value) {
+      this.showAttributes("faces", value);
+    },
   },
 
   mounted() {
@@ -136,7 +195,16 @@ export default {
   },
 
   methods: {
-    updateTree(object) {
+    showAttributes(name, visible) {
+      three.objectsGroup.traverse((obj) => {
+        if (obj.isAttributes && obj.name === name) {
+          obj.visible = visible;
+        }
+      });
+      this.updateTree();
+    },
+
+    updateTree() {
       if (!three) return [];
       let getChildren = (parent) => {
         return parent.children
@@ -152,8 +220,10 @@ export default {
           });
       };
 
-      this.tree = getChildren(object || three.objectsGroup);
-      console.log("update tree", this.tree);
+      if (three.mode === "Scene") this.tree = getChildren(three.objectsGroup);
+      else if (three.mode === "Attributes")
+        this.tree = getChildren(three.editingObj);
+      // console.log("update tree", this.tree);
     },
 
     toggleVisibility(item) {
@@ -307,12 +377,12 @@ export default {
     editAttributes(item) {
       let obj = this.getObject(item.id);
       three.editAttributes(obj);
-      this.updateTree(obj);
+      this.$root.$emit("showAttributes", ['vertices', 'edges', 'faces']);
     },
 
     exitEditAttributes() {
       three.exitEditAttributes();
-      this.updateTree();
+      this.$root.$emit("showAttributes", ['faces']);
     },
   },
 };
