@@ -1,6 +1,6 @@
 <template>
   <v-container>
-    <v-card color="black" class="scroll" :height="halfHeight">
+    <v-card class="scroll" outlined :height="halfHeight">
       <v-card-title>{{ mode }}</v-card-title>
       <v-treeview
         :items="tree"

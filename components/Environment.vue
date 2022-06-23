@@ -2,7 +2,7 @@
   <v-container class="pa-5">
     <v-row>
       <v-col>
-        <v-radio-group v-model="backgroundColor" label="Background">
+        <v-radio-group v-model="backgroundColor" label="Theme">
           <v-radio label="Dark" :value="0x1e1e1e" />
           <v-radio label="Light" :value="0xeeeeee" />
         </v-radio-group>
@@ -63,6 +63,7 @@ export default {
 
     backgroundColor(val) {
       three.scene.background.setHex(val);
+      this.$vuetify.theme.dark = val === 0x1e1e1e;
     },
 
     viewMode(val) {

@@ -1,5 +1,5 @@
 <template>
-  <v-card color="black">
+  <v-card outlined>
     <v-card-title>Property</v-card-title>
     <v-data-table
       :headers="headers"
@@ -94,10 +94,6 @@ export default {
 <style>
 .scroll {
   overflow-y: scroll;
-}
-
-.v-data-table__wrapper {
-  background: black;
 }
 
 .v-data-table__wrapper > table > tbody > tr:hover {
