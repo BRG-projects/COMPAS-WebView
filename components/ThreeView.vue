@@ -210,6 +210,8 @@ class Three {
     this.editingObj.children.forEach((child) => {
       child.selectAttribute(-1);
       if (child.name === "vertices") child.visible = false;
+      if (child.name === "edges") child.visible = false;
+      if (child.name === "faces") child.visible = true;
     });
     this.editingObj = null;
     this.mode = "Scene";

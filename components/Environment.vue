@@ -18,6 +18,8 @@
           <v-radio label="Normal" value="Normal" />
           <v-radio label="Ghosted" value="Ghosted" />
           <v-radio label="Wireframe" value="Wireframe" />
+          <v-radio label="Normal+Wireframe" value="NormalWireframe" />
+          <v-radio label="Ghosted+Wireframe" value="GhostedWireframe" />
         </v-radio-group>
       </v-col>
     </v-row>
@@ -65,9 +67,6 @@ export default {
 
     viewMode(val) {
       let initViewProperties = (obj) => {
-        if (obj._visible === undefined) {
-          obj._visible = obj.visible;
-        }
         if (obj.material) {
           if (obj.material._opacity === undefined) {
             obj.material._opacity = obj.material.opacity;
@@ -77,29 +76,37 @@ export default {
           }
         }
       };
-      three.objectsGroup.traverse(function (child) {
+      three.objectsGroup.traverse((child) => {
+        if (!child.isAttributes || !child.material) return;
         initViewProperties(child);
-        if (val === "Normal" && child.material) {
+        if (val === "Normal") {
+          if (child.name === "faces") child.visible = true;
+          if (child.name === "edges") child.visible = false;
+          if (child.name === "vertices") child.visible = false;
           child.material.transparent = child.material._transparent;
           child.material.opacity = child.material._opacity;
-          child.visible = child._visible;
-        } else if (
-          val === "Ghosted" &&
-          child.type === "Mesh" &&
-          child.material
-        ) {
-          child.visible = child._visible;
-          child.material._transparent = child.material.transparent;
-          child.material._opacity = child.material.opacity;
+        } else if (val === "Ghosted") {
+          if (child.name === "faces") child.visible = true;
+          if (child.name === "edges") child.visible = false;
+          if (child.name === "vertices") child.visible = false;
           child.material.transparent = true;
           child.material.opacity = 0.3;
-        } else if (
-          val === "Wireframe" &&
-          child.isAttributes &&
-          child.name === "faces"
-        ) {
-          child._visible = child.visible;
-          child.visible = false;
+        } else if (val === "Wireframe") {
+          if (child.name === "faces") child.visible = false;
+          if (child.name === "edges") child.visible = true;
+          if (child.name === "vertices") child.visible = false;
+        } else if (val === "NormalWireframe") {
+          if (child.name === "faces") child.visible = true;
+          if (child.name === "edges") child.visible = true;
+          if (child.name === "vertices") child.visible = false;
+          child.material.transparent = child.material._transparent;
+          child.material.opacity = child.material._opacity;
+        } else if (val === "GhostedWireframe") {
+          if (child.name === "faces") child.visible = true;
+          if (child.name === "edges") child.visible = true;
+          if (child.name === "vertices") child.visible = false;
+          child.material.transparent = true;
+          child.material.opacity = 0.3;
         }
       });
     },

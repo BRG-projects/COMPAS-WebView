@@ -232,6 +232,7 @@ export default function compasToThree(data, settings = {}) {
         // lineSegments.computeLineDistances()
         const lineSegments = new THREE.LineSegments(lineGeometry, lineMaterial);
         lineSegments.name = "edges";
+        lineSegments.visible = false;
         lineSegments.isAttributes = true;
         lineSegments.lastSelected = null;
 
