@@ -118,6 +118,12 @@ export default {
     this.$root.$on("updateTree", () => {
       this.updateTree();
     });
+
+    this.$root.$on("showAttributes", (names)=>{
+      this.showVertices = names.includes("vertices");
+      this.showEdges = names.includes("edges");
+      this.showFaces = names.includes("faces");
+    });
   },
 
   computed: {
@@ -371,12 +377,12 @@ export default {
     editAttributes(item) {
       let obj = this.getObject(item.id);
       three.editAttributes(obj);
-      this.updateTree();
+      this.$root.$emit("showAttributes", ['vertices', 'edges', 'faces']);
     },
 
     exitEditAttributes() {
       three.exitEditAttributes();
-      this.updateTree();
+      this.$root.$emit("showAttributes", ['faces']);
     },
   },
 };

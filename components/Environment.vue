@@ -81,35 +81,29 @@ export default {
         if (!child.isAttributes || !child.material) return;
         initViewProperties(child);
         if (val === "Normal") {
-          if (child.name === "faces") child.visible = true;
-          if (child.name === "edges") child.visible = false;
-          if (child.name === "vertices") child.visible = false;
           child.material.transparent = child.material._transparent;
           child.material.opacity = child.material._opacity;
         } else if (val === "Ghosted") {
-          if (child.name === "faces") child.visible = true;
-          if (child.name === "edges") child.visible = false;
-          if (child.name === "vertices") child.visible = false;
           child.material.transparent = true;
           child.material.opacity = 0.3;
         } else if (val === "Wireframe") {
-          if (child.name === "faces") child.visible = false;
-          if (child.name === "edges") child.visible = true;
-          if (child.name === "vertices") child.visible = false;
         } else if (val === "NormalWireframe") {
-          if (child.name === "faces") child.visible = true;
-          if (child.name === "edges") child.visible = true;
-          if (child.name === "vertices") child.visible = false;
           child.material.transparent = child.material._transparent;
           child.material.opacity = child.material._opacity;
         } else if (val === "GhostedWireframe") {
-          if (child.name === "faces") child.visible = true;
-          if (child.name === "edges") child.visible = true;
-          if (child.name === "vertices") child.visible = false;
           child.material.transparent = true;
           child.material.opacity = 0.3;
         }
       });
+
+      const attributesVisibilities = {
+        Normal: ["faces"],
+        Ghosted: ["faces"],
+        Wireframe: ["edges"],
+        NormalWireframe: ["edges", "faces"],
+        GhostedWireframe: ["edges", "faces"],
+      };
+      this.$root.$emit("showAttributes", attributesVisibilities[val]);
     },
 
     gimbal(val) {
