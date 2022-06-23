@@ -6,6 +6,13 @@
  */
 
 /*!
+ * camera-controls
+ * https://github.com/yomotsu/camera-controls
+ * (c) 2017 @yomotsu
+ * Released under the MIT License.
+ */
+
+/*!
  * is-plain-object <https://github.com/jonschlinkert/is-plain-object>
  *
  * Copyright (c) 2014-2017, Jon Schlinkert.
@@ -32,14 +39,6 @@
  * @license
  * Copyright 2010-2022 Three.js Authors
  * SPDX-License-Identifier: MIT
- */
-
-
-/*!
- * camera-controls
- * https://github.com/yomotsu/camera-controls
- * (c) 2017 @yomotsu
- * Released under the MIT License.
  */
 
 
