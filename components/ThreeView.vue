@@ -24,7 +24,7 @@ class Three {
     this.perspectiveCamera = new THREE.PerspectiveCamera(
       75,
       window.innerWidth / window.innerHeight,
-      0.0001,
+      0.1,
       1000
     );
     this.perspectiveCamera.position.set(10, 10, 10);
@@ -34,7 +34,7 @@ class Three {
       window.innerWidth / 2,
       window.innerHeight / 2,
       window.innerHeight / -2,
-      0.0001,
+      0.1,
       1000
     );
     this.orthographicCamera.position.set(10, 10, 10);
