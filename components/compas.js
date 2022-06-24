@@ -244,18 +244,21 @@ export default function compasToThree(data, settings = {}) {
         lineSegments.visible = false;
         lineSegments.isAttributes = true;
         lineSegments.lastSelected = null;
+        lineSegments.setColor = (r, g, b) =>{
+            for (let i = 0; i < lineSegments.geometry.attributes.color.array.length; i += 3) {
+                lineSegments.geometry.attributes.color.array[i] = r;
+                lineSegments.geometry.attributes.color.array[i + 1] = g;
+                lineSegments.geometry.attributes.color.array[i + 2] = b;
+            }
+            lineSegments.geometry.attributes.color.needsUpdate = true;
+        }
         lineSegments.invertColor = (isDark) => {
             if (colorEdges.getHex() === 0xffffff && !isDark) {
                 colorEdges.set(0x000000);
             } else if (colorEdges.getHex() === 0x000000 && isDark) {
                 colorEdges.set(0xffffff);
             }
-            for (let i = 0; i < lineSegments.geometry.attributes.color.array.length; i += 3) {
-                lineSegments.geometry.attributes.color.array[i] = colorEdges.r;
-                lineSegments.geometry.attributes.color.array[i + 1] = colorEdges.g;
-                lineSegments.geometry.attributes.color.array[i + 2] = colorEdges.b;
-            }
-            lineSegments.geometry.attributes.color.needsUpdate = true;
+            lineSegments.setColor(colorEdges.r, colorEdges.g, colorEdges.b);
         }
         lineSegments.selectAttribute = (index) => {
 
@@ -321,13 +324,16 @@ export default function compasToThree(data, settings = {}) {
         points.name = "vertices";
         points.isAttributes = true;
         points.lastSelected = null;
-
+        points.setColor = (r, g, b) =>{
+            colorPoints.set(r, g, b);
+        }
         points.invertColor = (isDark) => {
             if (colorPoints.getHex() === 0xffffff && !isDark) {
                 colorPoints.set(0x000000);
             } else if (colorPoints.getHex() === 0x000000 && isDark) {
                 colorPoints.set(0xffffff);
             }
+            points.geometry.attributes.selected.needsUpdate = true;
         }
 
         points.selectAttribute = (index) => {
@@ -359,6 +365,12 @@ export default function compasToThree(data, settings = {}) {
         mesh.updateFromSettings = () => {
             if (settings['color.faces']){
                 faces.setColor(settings['color.faces'].value.red, settings['color.faces'].value.green, settings['color.faces'].value.blue);
+            }
+            if (settings['color.edges']){
+                lineSegments.setColor(settings['color.edges'].value.red, settings['color.edges'].value.green, settings['color.edges'].value.blue);
+            }
+            if (settings['color.vertices']){
+                points.setColor(settings['color.vertices'].value.red, settings['color.vertices'].value.green, settings['color.vertices'].value.blue);
             }
         }
 
