@@ -62,8 +62,10 @@ export default {
     },
 
     backgroundColor(val) {
+      const dark = val === 0x1e1e1e;
       three.scene.background.setHex(val);
-      this.$vuetify.theme.dark = val === 0x1e1e1e;
+      this.$vuetify.theme.dark = dark;
+      three.adaptAttributesColorToTheme(dark);
     },
 
     viewMode(val) {

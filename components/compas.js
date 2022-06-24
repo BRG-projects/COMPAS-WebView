@@ -6,12 +6,15 @@ import { vertexShader, fragmentShader } from "../shaders/points";
 
 export default function compasToThree(data, settings = {}) {
 
-    console.log("toThree", data);
+    console.log("toThree", data, settings);
 
     if (data.dtype === "compas.datastructures/Mesh") {
 
         const mesh = new THREE.Group();
-        mesh.type = "Mesh"
+        mesh.type = data.dtype;
+        mesh.guid = data.guid;
+        mesh.name = data.value.name
+        mesh.settings = settings;
 
         let vertices = [];
         let normals = [];
@@ -235,7 +238,19 @@ export default function compasToThree(data, settings = {}) {
         lineSegments.visible = false;
         lineSegments.isAttributes = true;
         lineSegments.lastSelected = null;
-
+        lineSegments.invertColor = (isDark) =>{
+            if (colorEdges.getHex() === 0xffffff && !isDark) {
+                colorEdges.set(0x000000);
+            }else if(colorEdges.getHex() === 0x000000 && isDark){
+                colorEdges.set(0xffffff);
+            }
+            for(let i = 0; i < lineSegments.geometry.attributes.color.array.length; i+=3){
+                lineSegments.geometry.attributes.color.array[i] = colorEdges.r;
+                lineSegments.geometry.attributes.color.array[i+1] = colorEdges.g;
+                lineSegments.geometry.attributes.color.array[i+2] = colorEdges.b;
+            }
+            lineSegments.geometry.attributes.color.needsUpdate = true;
+        }
         lineSegments.selectAttribute = (index) => {
 
             let changeColor = (index, r, g, b) => {
@@ -300,6 +315,14 @@ export default function compasToThree(data, settings = {}) {
         points.name = "vertices";
         points.isAttributes = true;
         points.lastSelected = null;
+
+        points.invertColor = (isDark) =>{
+            if (colorPoints.getHex() === 0xffffff && !isDark) {
+                colorPoints.set(0x000000);
+            }else if(colorPoints.getHex() === 0x000000 && isDark){
+                colorPoints.set(0xffffff);
+            }
+        }
 
         points.selectAttribute = (index) => {
             points.geometry.attributes.selected.array.fill(0);

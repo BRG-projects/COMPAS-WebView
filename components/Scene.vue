@@ -214,8 +214,9 @@ export default {
           .filter((child) => child.name !== "Gimbal")
           .map((child) => {
             return {
-              name: child.name ? child.name : `(${child.type})`,
+              name: child.name || child.guid ? child.name || child.guid : `(${child.type})`,
               id: child.id,
+              guid: child.guid,
               type: child.type,
               visible: child.visible,
               children: getChildren(child),
@@ -329,35 +330,41 @@ export default {
       let obj = this.getObject(item.id);
       let properties = [
         {
-          key: "id",
-          value: item.id,
-        },
-        {
           key: "name",
-          value: item.name,
+          value: obj.name,
         },
         {
           key: "type",
-          value: item.type,
-        },
-        {
-          key: "visible",
-          value: item.visible,
+          value: obj.type,
         },
       ];
 
-      if (obj.material) {
+      if (obj.guid){
         properties.push({
-          key: "material",
-          value: obj.material.type,
-          color: obj.material.color,
+          key: "guid",
+          value: obj.guid,
         });
       }
+
+      if (obj.settings){
+        properties.push({
+          key: "settings",
+          value: JSON.stringify(obj.settings),
+        });
+      }
+
+      // if (obj.material) {
+      //   properties.push({
+      //     key: "material",
+      //     value: obj.material.type,
+      //     color: obj.material.color,
+      //   });
+      // }
 
       if (obj.data) {
         properties.push({
           key: "data",
-          value: obj.data.dtype,
+          value: "{...}",
           data: obj.data,
         });
       }

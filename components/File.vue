@@ -21,7 +21,7 @@
             'DragonAttenuation.glb',
             'InterpolationTest.glb',
             'tubemesh.json',
-            'viewobjects.json'
+            'viewobjects.json',
           ]"
         ></v-select>
       </v-list-item-content>
@@ -198,18 +198,19 @@ export default {
 
           case "json":
             console.log("json", content);
-            if (Array.isArray(content)){
-              content.forEach(function(obj){
+            if (Array.isArray(content)) {
+              content.forEach(function (obj) {
                 let mesh = compasToThree(obj.data, obj.settings);
                 three.objectsGroup.add(mesh);
               });
-            }else{
+              three.adaptAttributesColorToTheme(this.$vuetify.theme.dark);
+            } else {
               let obj = compasToThree(content);
-            if (obj) {
-              three.objectsGroup.add(obj);
+              if (obj) {
+                three.objectsGroup.add(obj);
+              }
             }
-            }
-            
+
             break;
 
           default:

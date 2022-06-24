@@ -142,7 +142,7 @@ export default {
         } else if (val === "Orthographic") {
           three.camera = three.orthographicCamera;
         }
-        // three.camera.add(three.pointLight);
+        three.camera.add(three.pointLight);
         three.renderPass.camera = three.camera;
         three.outlinePass.renderCamera = three.camera;
         three.controls.dispose();

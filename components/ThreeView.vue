@@ -42,7 +42,7 @@ class Three {
     this.camera = this.perspectiveCamera;
     this.controls = null;
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
-    this.pointLight = new THREE.PointLight(0xffffff, 0.5, 100);
+    this.pointLight = new THREE.PointLight(0xffffff, 0.5, 50);
     this.ambientLight = new THREE.AmbientLight(0xffffff, 1);
     this.axes = new THREE.AxesHelper(5);
     this.grid = new THREE.GridHelper(10, 10);
@@ -67,6 +67,7 @@ class Three {
     this.refs = refs;
     this.defaultGroup.name = "Default";
     this.camera.add(this.pointLight);
+    this.pointLight.position.set(5, 5, 5);
     this.defaultGroup.add(this.ambientLight);
     this.defaultGroup.add(this.perspectiveCamera);
     this.defaultGroup.add(this.orthographicCamera);
@@ -108,14 +109,16 @@ class Three {
       this.interactiveGroup,
       this.camera
     );
+    this.outlinePass.edgeThickness = 2;
+    this.outlinePass.edgeStrength = 10;
     this.composer.addPass(this.outlinePass);
 
-    let effectFXAA = new ShaderPass(FXAAShader);
-    effectFXAA.uniforms["resolution"].value.set(
+    this.effectFXAA = new ShaderPass(FXAAShader);
+    this.effectFXAA.uniforms["resolution"].value.set(
       1 / window.innerWidth,
       1 / window.innerHeight
     );
-    this.composer.addPass(effectFXAA);
+    this.composer.addPass(this.effectFXAA);
 
     this.updateDimensions();
     window.addEventListener("resize", this.updateDimensions);
@@ -178,6 +181,7 @@ class Three {
     let height = three.refs.container.clientHeight;
     three.renderer.setSize(width, height);
     three.composer.setSize(width, height);
+    three.effectFXAA.uniforms["resolution"].value.set(1 / width, 1 / height);
     if (three.camera === three.perspectiveCamera) {
       three.camera.aspect = width / height;
     } else if (three.camera === three.orthographicCamera) {
@@ -212,6 +216,14 @@ class Three {
     });
     this.editingObj = null;
     this.mode = "Scene";
+  }
+
+  adaptAttributesColorToTheme(isDark) {
+    this.objectsGroup.traverse((obj) => {
+      if (obj.isAttributes && (obj.name === "edges" || obj.name === "vertices")) {
+        obj.invertColor(isDark);
+      }
+    });
   }
 }
 
