@@ -17,6 +17,9 @@
         <v-icon v-if="item.data" @click="showData(item.data)"
           >mdi-database-eye
         </v-icon>
+        <v-icon v-if="item.settings" @click="$root.$emit('showSettings', {id, settings: item.settings})"
+          >mdi-cog
+        </v-icon>
         <div v-if="showColorPicker && item.color">
           <v-color-picker
             v-model="color"
@@ -35,8 +38,9 @@
 export default {
   name: "Property",
   created() {
-    this.$root.$on("showProperty", (properties) => {
+    this.$root.$on("showProperty", ({id, properties}) => {
       this.items = properties;
+      this.id = id;
     });
   },
 
@@ -48,7 +52,7 @@ export default {
         { text: "Value", value: "value" },
       ],
       items: [],
-
+      id: null,
       showColorPicker: false,
       color: null,
       threeColorObj: null,

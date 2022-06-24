@@ -288,7 +288,7 @@ export default {
                   : intersects[0].faceIndex;
               let attributeProperties = attributeObject.selectAttribute(index);
 
-              this.$root.$emit("showProperty", attributeProperties || []);
+              this.$root.$emit("showProperty", {id: null, properties: attributeProperties || []});
             }
           } else {
             attributeObject.selectAttribute(-1);

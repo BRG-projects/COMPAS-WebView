@@ -44,9 +44,9 @@ export default function compasToThree(data, settings = {}) {
         }
 
         let triangleIndex = 0;
-        
+
         let vertexKeys = Object.keys(data.value.vertex)
-        for (let i = 0; i< vertexKeys.length; i++) {
+        for (let i = 0; i < vertexKeys.length; i++) {
             vertexMapping[i] = vertexKeys[i]
         }
 
@@ -153,6 +153,12 @@ export default function compasToThree(data, settings = {}) {
         faces.name = "faces";
         faces.isAttributes = true;
         faces.lastSelected = null;
+        faces.setColor = (r, g, b) =>{
+            for (let i = 0; i < faces.geometry.attributes.color.count; i++) {
+                faces.geometry.attributes.color.setXYZ(i, r, g, b);
+            }
+            faces.geometry.attributes.color.needsUpdate = true;
+        }
 
         faces.selectAttribute = (index) => {
             let changeColor = (index, r, g, b) => {
@@ -181,17 +187,17 @@ export default function compasToThree(data, settings = {}) {
 
             let properties = [
                 {
-                  key: "key",
-                  value: triangleFaceMapping[index],
+                    key: "key",
+                    value: triangleFaceMapping[index],
                 },
                 {
-                  key: "data",
-                  value: "facedata",
-                  data: data.value.facedata[triangleFaceMapping[index]],
+                    key: "data",
+                    value: "facedata",
+                    data: data.value.facedata[triangleFaceMapping[index]],
                 },
-              ];
+            ];
 
-              console.log(data)
+            console.log(data)
 
             return properties
         }
@@ -238,16 +244,16 @@ export default function compasToThree(data, settings = {}) {
         lineSegments.visible = false;
         lineSegments.isAttributes = true;
         lineSegments.lastSelected = null;
-        lineSegments.invertColor = (isDark) =>{
+        lineSegments.invertColor = (isDark) => {
             if (colorEdges.getHex() === 0xffffff && !isDark) {
                 colorEdges.set(0x000000);
-            }else if(colorEdges.getHex() === 0x000000 && isDark){
+            } else if (colorEdges.getHex() === 0x000000 && isDark) {
                 colorEdges.set(0xffffff);
             }
-            for(let i = 0; i < lineSegments.geometry.attributes.color.array.length; i+=3){
+            for (let i = 0; i < lineSegments.geometry.attributes.color.array.length; i += 3) {
                 lineSegments.geometry.attributes.color.array[i] = colorEdges.r;
-                lineSegments.geometry.attributes.color.array[i+1] = colorEdges.g;
-                lineSegments.geometry.attributes.color.array[i+2] = colorEdges.b;
+                lineSegments.geometry.attributes.color.array[i + 1] = colorEdges.g;
+                lineSegments.geometry.attributes.color.array[i + 2] = colorEdges.b;
             }
             lineSegments.geometry.attributes.color.needsUpdate = true;
         }
@@ -316,10 +322,10 @@ export default function compasToThree(data, settings = {}) {
         points.isAttributes = true;
         points.lastSelected = null;
 
-        points.invertColor = (isDark) =>{
+        points.invertColor = (isDark) => {
             if (colorPoints.getHex() === 0xffffff && !isDark) {
                 colorPoints.set(0x000000);
-            }else if(colorPoints.getHex() === 0x000000 && isDark){
+            } else if (colorPoints.getHex() === 0x000000 && isDark) {
                 colorPoints.set(0xffffff);
             }
         }
@@ -336,19 +342,25 @@ export default function compasToThree(data, settings = {}) {
 
             let properties = [
                 {
-                  key: "key",
-                  value: vertexMapping[index],
+                    key: "key",
+                    value: vertexMapping[index],
                 },
                 {
-                  key: "data",
-                  value: "vertexdata",
-                  data: data.value.vertex[vertexMapping[index]],
+                    key: "data",
+                    value: "vertexdata",
+                    data: data.value.vertex[vertexMapping[index]],
                 },
-              ];
+            ];
 
             return properties
         }
         points.visible = false;
+
+        mesh.updateFromSettings = () => {
+            if (settings['color.faces']){
+                faces.setColor(settings['color.faces'].value.red, settings['color.faces'].value.green, settings['color.faces'].value.blue);
+            }
+        }
 
         mesh.add(points);
         mesh.data = data;
