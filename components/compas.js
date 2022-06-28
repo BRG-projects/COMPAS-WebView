@@ -325,7 +325,8 @@ export default function compasToThree(data, settings = {}) {
         points.isAttributes = true;
         points.lastSelected = null;
         points.setColor = (r, g, b) =>{
-            colorPoints.set(r, g, b);
+            colorPoints.setRGB(r, g, b);
+            points.geometry.attributes.selected.needsUpdate = true;
         }
         points.invertColor = (isDark) => {
             if (colorPoints.getHex() === 0xffffff && !isDark) {
