@@ -12,6 +12,7 @@
     </v-main>
     <Controller/>
     <DataForm />
+    <SettingsForm />
     <!-- <v-footer app>
       <span>&copy; {{ new Date().getFullYear() }}</span>
     </v-footer> -->
@@ -23,12 +24,14 @@ import Controller from "../components/Controller";
 import { mapState, mapActions } from "vuex";
 
 import DataForm from "../components/DataForm.vue";
+import SettingsForm from "../components/SettingsForm.vue";
 
 export default {
   name: "DefaultLayout",
   components: {
     Controller,
     DataForm,
+    SettingsForm
   },
   computed: mapState(["showController"]),
 

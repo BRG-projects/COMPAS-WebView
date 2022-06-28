@@ -214,7 +214,10 @@ export default {
           .filter((child) => child.name !== "Gimbal")
           .map((child) => {
             return {
-              name: child.name || child.guid ? child.name || child.guid : `(${child.type})`,
+              name:
+                child.name || child.guid
+                  ? child.name || child.guid
+                  : `(${child.type})`,
               id: child.id,
               guid: child.guid,
               type: child.type,
@@ -339,17 +342,18 @@ export default {
         },
       ];
 
-      if (obj.guid){
+      if (obj.guid) {
         properties.push({
           key: "guid",
           value: obj.guid,
         });
       }
 
-      if (obj.settings){
+      if (obj.settings) {
         properties.push({
           key: "settings",
-          value: JSON.stringify(obj.settings),
+          value: "{...}",
+          settings: obj.settings,
         });
       }
 
@@ -369,7 +373,7 @@ export default {
         });
       }
 
-      this.$root.$emit("showProperty", properties);
+      this.$root.$emit("showProperty", { id: item.id, properties });
     },
 
     scrollTo(id) {

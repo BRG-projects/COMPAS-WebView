@@ -103,7 +103,7 @@ export default {
     return {
       fileSource: "Examples",
       fileLoading: false,
-      fileExample: "DamagedHelmet.gltf",
+      fileExample: "viewobjects.json",
       fileInput: null,
       fileURL: "",
       animations: [],
