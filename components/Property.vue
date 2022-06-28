@@ -17,7 +17,9 @@
         <v-icon v-if="item.data" @click="showData(item.data)"
           >mdi-database-eye
         </v-icon>
-        <v-icon v-if="item.settings" @click="$root.$emit('showSettings', {id, settings: item.settings})"
+        <v-icon
+          v-if="item.settings"
+          @click="showSettings({ id, settings: item.settings })"
           >mdi-cog
         </v-icon>
       </template>
@@ -25,8 +27,7 @@
   </v-card>
 </template>
 <script>
-import { mapState } from 'vuex';
-
+import { mapActions, mapState } from "vuex";
 
 export default {
   name: "Property",
@@ -38,13 +39,10 @@ export default {
       ],
     };
   },
-
   computed: mapState("property", ["properties", "id"]),
-
   methods: {
-    showData(data) {
-      this.$root.$emit("showData", data);
-    },
+    ...mapActions("data", ["showData"]),
+    ...mapActions("settings", ["showSettings"]),
   },
 };
 </script>
