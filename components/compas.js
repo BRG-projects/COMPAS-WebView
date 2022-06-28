@@ -153,6 +153,16 @@ export default function compasToThree(data, settings = {}) {
         faces.name = "faces";
         faces.isAttributes = true;
         faces.lastSelected = null;
+        faces.getAttributes = () => {
+            const attributes = [];
+            for (const [key, data] of Object.entries(data.value.face)) {
+                attributes.push({
+                    name: key,
+                    id: "face." + key,
+                });
+            }
+            return attributes;
+        }
         faces.setColor = (r, g, b) =>{
             for (let i = 0; i < faces.geometry.attributes.color.count; i++) {
                 faces.geometry.attributes.color.setXYZ(i, r, g, b);
@@ -244,6 +254,16 @@ export default function compasToThree(data, settings = {}) {
         lineSegments.visible = false;
         lineSegments.isAttributes = true;
         lineSegments.lastSelected = null;
+        lineSegments.getAttributes = () => {
+            const attributes = [];
+            for (const [key, data] of Object.entries(edges)) {
+                attributes.push({
+                    name: key,
+                    id: "edge." + key,
+                });
+            }
+            return attributes;
+        }
         lineSegments.setColor = (r, g, b) =>{
             for (let i = 0; i < lineSegments.geometry.attributes.color.array.length; i += 3) {
                 lineSegments.geometry.attributes.color.array[i] = r;
@@ -324,6 +344,16 @@ export default function compasToThree(data, settings = {}) {
         points.name = "vertices";
         points.isAttributes = true;
         points.lastSelected = null;
+        points.getAttributes = () => {
+            const attributes = [];
+            for (const [key, data] of Object.entries(data.value.vertex)) {
+                attributes.push({
+                    name: key,
+                    id: "vertex." + key,
+                });
+            }
+            return attributes;
+        }
         points.setColor = (r, g, b) =>{
             colorPoints.setRGB(r, g, b);
             points.geometry.attributes.selected.needsUpdate = true;

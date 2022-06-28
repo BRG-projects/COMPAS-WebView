@@ -64,23 +64,17 @@
             </span>
           </template>
           <template v-slot:append="{ item }">
-            <v-icon @click="toggleVisibility(item)">
+            <v-icon v-if="mode === 'Scene'" @click="toggleVisibility(item)">
               {{ item.visible ? "mdi-eye" : "mdi-eye-off" }}
             </v-icon>
-            <v-icon
-              v-if="item.name !== 'Default' && item.name !== 'GLTFs'"
-              @click="remove(item)"
-            >
+            <v-icon v-if="mode === 'Scene'" @click="remove(item)">
               mdi-delete
             </v-icon>
-            <v-icon
-              v-if="item.name !== 'Default' && item.name !== 'GLTFs'"
-              @click.prevent="focus(item)"
-            >
+            <v-icon v-if="mode === 'Scene'" @click.prevent="focus(item)">
               mdi-crosshairs
             </v-icon>
             <v-icon
-              v-if="getObject(item.id).data"
+              v-if="mode === 'Scene' && getObject(item.id).data"
               @click="editAttributes(item)"
             >
               mdi-graph
@@ -144,6 +138,7 @@ export default {
 
     mode() {
       if (three) return three.mode;
+      else return "Scene";
     },
   },
 
@@ -213,6 +208,10 @@ export default {
         return parent.children
           .filter((child) => child.name !== "Gimbal")
           .map((child) => {
+            let children = [];
+            if (three.mode === "Scene") children = getChildren(child);
+            else if (three.mode === "Attributes" && child.getAttributes)
+              children = child.getAttributes(child);
             return {
               name:
                 child.name || child.guid
@@ -222,7 +221,7 @@ export default {
               guid: child.guid,
               type: child.type,
               visible: child.visible,
-              children: getChildren(child),
+              children: children,
             };
           });
       };
