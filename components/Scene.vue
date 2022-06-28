@@ -10,8 +10,8 @@
             outlined
             class="ml-1 pa-2"
             min-width="0"
-            :color="showVertices ? 'primary' : null"
-            @click="showVertices = !showVertices"
+            :color="attributesVisibility['vertices'] ? 'primary' : null"
+            @click="toggleAttributesVisibility('vertices')"
           >
             <v-icon small> mdi-square-medium-outline </v-icon>
           </v-btn>
@@ -21,8 +21,8 @@
             outlined
             class="ml-1 pa-2"
             min-width="0"
-            :color="showEdges ? 'primary' : null"
-            @click="showEdges = !showEdges"
+            :color="attributesVisibility['edges'] ? 'primary' : null"
+            @click="toggleAttributesVisibility('edges')"
           >
             <v-icon small> mdi-vector-line </v-icon>
           </v-btn>
@@ -31,8 +31,8 @@
             outlined
             class="ml-1 pa-2"
             min-width="0"
-            :color="showFaces ? 'primary' : null"
-            @click="showFaces = !showFaces"
+            :color="attributesVisibility['faces'] ? 'primary' : null"
+            @click="toggleAttributesVisibility('faces')"
           >
             <v-icon small> mdi-vector-triangle </v-icon>
           </v-btn>
@@ -44,10 +44,8 @@
           :items="tree"
           dense
           hoverable
-          :active="activated"
+          :active="[selected]"
           :open="opened"
-          @update:open="onOpen"
-          @update:active="select"
         >
           <template v-slot:prepend="{ item }">
             <v-icon>
@@ -58,13 +56,13 @@
             <span
               class="pointer"
               :ref="`label_${item.id}`"
-              @click.prevent="activate(item)"
+              @click="select(item.id)"
             >
               {{ item.name }}
             </span>
           </template>
           <template v-slot:append="{ item }">
-            <v-icon v-if="mode === 'Scene'" @click="toggleVisibility(item)">
+            <v-icon v-if="mode === 'Scene'" @click="toggleVisibility(item.id)">
               {{ item.visible ? "mdi-eye" : "mdi-eye-off" }}
             </v-icon>
             <v-icon v-if="mode === 'Scene'" @click="remove(item)">
@@ -73,12 +71,12 @@
             <v-icon v-if="mode === 'Scene'" @click.prevent="focus(item)">
               mdi-crosshairs
             </v-icon>
-            <v-icon
+            <!-- <v-icon
               v-if="mode === 'Scene' && getObject(item.id).data"
               @click="editAttributes(item)"
             >
               mdi-graph
-            </v-icon>
+            </v-icon> -->
           </template>
         </v-treeview>
       </v-card>
@@ -102,6 +100,7 @@
 </template>
 
 <script>
+import { mapActions, mapState } from "vuex";
 import Property from "./Property.vue";
 
 export default {
@@ -111,40 +110,16 @@ export default {
     Property,
   },
 
-  created() {
-    this.$root.$on("updateTree", () => {
-      this.updateTree();
-    });
-
-    this.$root.$on("showAttributes", (names) => {
-      this.showVertices = names.includes("vertices");
-      this.showEdges = names.includes("edges");
-      this.showFaces = names.includes("faces");
-    });
-  },
-
   computed: {
-    selected() {
-      if (three) {
-        return three.selected;
-      } else {
-        return null;
-      }
-    },
+    ...mapState("scene", ["mode", "tree", "selected", "attributesVisibility"]),
 
     halfHeight() {
       return (document.body.clientHeight - 48) / 2;
-    },
-
-    mode() {
-      if (three) return three.mode;
-      else return "Scene";
     },
   },
 
   data() {
     return {
-      tree: [],
       opened: [],
       icons: {
         Group: "mdi-folder-multiple",
@@ -157,158 +132,48 @@ export default {
         LineSegments: "mdi-vector-line",
         Points: "mdi-square-medium-outline",
       },
-      activated: [],
       attributeMode: "vertices",
-      showVertices: false,
-      showEdges: false,
-      showFaces: true,
     };
   },
 
   watch: {
-    selected() {
-      this.updateActivated();
-    },
-
     attributeMode(value) {
       three.attributeMode = value;
-    },
-
-    showVertices(value) {
-      this.showAttributes("vertices", value);
-    },
-
-    showEdges(value) {
-      this.showAttributes("edges", value);
-    },
-
-    showFaces(value) {
-      this.showAttributes("faces", value);
     },
   },
 
   mounted() {
     this.updateTree();
-    this.updateActivated();
+    this.$root.$on("highlight", this.highlight);
   },
 
   methods: {
-    showAttributes(name, visible) {
-      three.objectsGroup.traverse((obj) => {
-        if (obj.isAttributes && obj.name === name) {
-          obj.visible = visible;
-        }
-      });
-      this.updateTree();
-    },
+    ...mapActions("scene", [
+      "select",
+      "updateTree",
+      "toggleVisibility",
+      "toggleAttributesVisibility",
+      "getObject",
+      "removeObject",
+    ]),
 
-    updateTree() {
-      if (!three) return [];
-      let getChildren = (parent) => {
-        return parent.children
-          .filter((child) => child.name !== "Gimbal")
-          .map((child) => {
-            let children = [];
-            if (three.mode === "Scene") children = getChildren(child);
-            else if (three.mode === "Attributes" && child.getAttributes)
-              children = child.getAttributes(child);
-            return {
-              name:
-                child.name || child.guid
-                  ? child.name || child.guid
-                  : `(${child.type})`,
-              id: child.id,
-              guid: child.guid,
-              type: child.type,
-              visible: child.visible,
-              children: children,
-            };
-          });
-      };
-
-      if (three.mode === "Scene") this.tree = getChildren(three.objectsGroup);
-      else if (three.mode === "Attributes")
-        this.tree = getChildren(three.editingObj);
-      // console.log("update tree", this.tree);
-    },
-
-    toggleVisibility(item) {
-      item.visible = !item.visible;
-      this.getObject(item.id).visible = item.visible;
-    },
-
-    activate(item) {
-      this.activated = [item.id];
-      this.showProperty(item);
-    },
-
-    updateActivated() {
+    async highlight() {
       if (this.selected) {
-        this.activated = [this.selected.id];
-        let path = this.findPath(this.activated[0]);
+        let path = await this.findPath(this.selected);
         this.opened = path;
-        this.scrollTo(this.activated[0]);
-
-        let item = this.getItem(this.activated[0]);
-        console.log("updateActivated", this.activated[0]);
-        console.log("item", item);
-        if (item) {
-          this.showProperty(item);
-        }
-      } else this.activated = [];
-    },
-
-    onOpen(items) {
-      console.log(items);
+        this.scrollTo(this.selected);
+      }
     },
 
     remove(item) {
       if (confirm(`Are you sure you want to delete ${item.name}?`)) {
-        let obj = this.getObject(item.id);
-        obj.parent.remove(obj);
-        this.updateTree();
+        this.removeObject(item.id);
       }
     },
 
-    getObject(id) {
-      let obj = {};
-      three.scene.traverse((child) => {
-        if (child.id == id) {
-          obj = child;
-        }
-      });
-
-      return obj;
-    },
-
-    getItem(id) {
-      let found = {};
-      let findItem = (parent, id, found) => {
-        if (parent.id == id) {
-          found.item = parent;
-        } else if (parent.children) {
-          parent.children.forEach((child) => {
-            findItem(child, id, found);
-          });
-        }
-      };
-
-      findItem({ children: this.tree }, id, found);
-
-      return found.item;
-    },
-
-    select(activated) {
-      if (this.mode === "Attributes") return;
-      if (activated.length === 0) return;
-      if (this.selected && this.selected.id === activated[0]) return;
-      let obj = this.getObject(activated[0]);
-      three.select(obj);
-    },
-
-    findPath(id) {
+    async findPath(id) {
       let path = [];
-      let obj = this.getObject(id);
+      let obj = await this.getObject(id);
       while (obj.parent) {
         path.push(obj.parent.id);
         obj = obj.parent;
@@ -317,62 +182,9 @@ export default {
       return path.reverse();
     },
 
-    isSelected(item) {
-      let obj = this.getObject(item.id);
-      return three.selected === obj;
-    },
-
-    focus(item) {
-      let obj = this.getObject(item.id);
+    async focus(item) {
+      let obj = await this.getObject(item.id);
       three.focus(obj);
-      console.log(obj);
-    },
-
-    showProperty(item) {
-      let obj = this.getObject(item.id);
-      let properties = [
-        {
-          key: "name",
-          value: obj.name,
-        },
-        {
-          key: "type",
-          value: obj.type,
-        },
-      ];
-
-      if (obj.guid) {
-        properties.push({
-          key: "guid",
-          value: obj.guid,
-        });
-      }
-
-      if (obj.settings) {
-        properties.push({
-          key: "settings",
-          value: "{...}",
-          settings: obj.settings,
-        });
-      }
-
-      // if (obj.material) {
-      //   properties.push({
-      //     key: "material",
-      //     value: obj.material.type,
-      //     color: obj.material.color,
-      //   });
-      // }
-
-      if (obj.data) {
-        properties.push({
-          key: "data",
-          value: "{...}",
-          data: obj.data,
-        });
-      }
-
-      this.$root.$emit("showProperty", { id: item.id, properties });
     },
 
     scrollTo(id) {

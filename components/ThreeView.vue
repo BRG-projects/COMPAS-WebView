@@ -15,6 +15,7 @@ import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import { FXAAShader } from "three/examples/jsm/shaders/FXAAShader.js";
 import { TransformControls } from "three/examples/jsm/controls/TransformControls.js";
 import CameraControls from "camera-controls";
+import { mapActions } from "vuex";
 
 CameraControls.install({ THREE });
 
@@ -220,10 +221,23 @@ class Three {
 
   adaptAttributesColorToTheme(isDark) {
     this.objectsGroup.traverse((obj) => {
-      if (obj.isAttributes && (obj.name === "edges" || obj.name === "vertices")) {
+      if (
+        obj.isAttributes &&
+        (obj.name === "edges" || obj.name === "vertices")
+      ) {
         obj.invertColor(isDark);
       }
     });
+  }
+
+  getObjectById(id) {
+    let obj;
+    this.objectsGroup.traverse((_obj) => {
+      if (_obj.id === id) {
+        obj = _obj;
+      }
+    });
+    return obj;
   }
 }
 
@@ -241,11 +255,12 @@ export default {
   },
 
   methods: {
+    ...mapActions("scene", ["select"]),
     onMouseMove(event) {
       this.three.pointer.x = (event.offsetX / event.target.width) * 2 - 1;
       this.three.pointer.y = -(event.offsetY / event.target.height) * 2 + 1;
     },
-    onMouseDown() {
+    async onMouseDown() {
       this.three.raycaster.setFromCamera(this.three.pointer, this.three.camera);
       if (this.three.mode === "Scene") {
         let intersects = this.three.raycaster.intersectObjects(
@@ -258,9 +273,10 @@ export default {
           console.log("raytrace intersects", intersects);
           let obj = intersects[0].object;
           if (obj.isAttributes) obj = obj.parent;
-          this.three.select(obj);
+          await this.select(obj.id);
+          this.$root.$emit("highlight");
         } else {
-          this.three.select();
+          this.select();
         }
       } else if (this.three.mode === "Attributes") {
         this.three.editingObj.children.forEach((attributeObject) => {
@@ -288,7 +304,10 @@ export default {
                   : intersects[0].faceIndex;
               let attributeProperties = attributeObject.selectAttribute(index);
 
-              this.$root.$emit("showProperty", {id: null, properties: attributeProperties || []});
+              this.$root.$emit("showProperty", {
+                id: null,
+                properties: attributeProperties || [],
+              });
             }
           } else {
             attributeObject.selectAttribute(-1);
