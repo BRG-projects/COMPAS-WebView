@@ -60,7 +60,6 @@ export const actions = {
                 properties.push({
                     key: "settings",
                     value: "{...}",
-                    settings: obj.settings,
                 });
             }
             if (obj.data) {

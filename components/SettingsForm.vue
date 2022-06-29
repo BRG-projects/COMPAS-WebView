@@ -15,6 +15,7 @@
           <v-btn
             v-if="item.color"
             :color="item.color"
+            @click="setEditingColorKey(item.key)"
           ></v-btn>
           <v-card v-if="editingColorKey === item.key" class="my-2">
             <v-color-picker
@@ -22,8 +23,10 @@
               dot-size="19"
               swatches-max-height="200"
             ></v-color-picker>
-            <v-btn color="primary" @click="confirmColor">Apply</v-btn>
-            <v-btn @click="editingColorKey = null">Cancel</v-btn>
+            <v-btn color="primary" @click="applyColor(editingColorValue)"
+              >Apply</v-btn
+            >
+            <v-btn @click="setEditingColorKey(null)">Cancel</v-btn>
           </v-card>
         </template>
       </v-data-table>
@@ -34,20 +37,17 @@
   </v-overlay>
 </template>
 <script>
-import { mapActions, mapState } from "vuex";
+import { mapActions, mapMutations, mapState } from "vuex";
 
 export default {
   name: "SettingsForm",
-  // created() {
-  //   this.$root.$on("showSettings", ({id, settings}) => {
-  //     this.show = true;
-  //     this.items = this.mapSettings(settings);
-  //     this.id = id;
-  //     this.settings = settings;
-  //   });
-  // },
 
-  computed: mapState("settings", ["settingsView", "id", "show"]),
+  computed: mapState("settings", [
+    "settingsView",
+    "id",
+    "show",
+    "editingColorKey",
+  ]),
 
   data() {
     return {
@@ -56,29 +56,13 @@ export default {
         { text: "Value", value: "value" },
       ],
       settings: {},
-      editingColorKey: null,
       editingColorValue: null,
     };
   },
 
   methods: {
-    ...mapActions("settings", ["hideSettings"]),
-
-    confirmColor() {
-      let color = this.settings[this.editingColorKey].value;
-      color.red = this.editingColorValue.rgba.r / 255;
-      color.green = this.editingColorValue.rgba.g / 255;
-      color.blue = this.editingColorValue.rgba.b / 255;
-      this.editingColorKey = null;
-      this.items = this.mapSettings(this.settings);
-
-      console.log(this.id);
-      three.objectsGroup.traverse((obj) => {
-        if (obj.id === this.id) {
-          obj.updateFromSettings();
-        }
-      });
-    },
+    ...mapActions("settings", ["hideSettings", "applyColor"]),
+    ...mapMutations("settings", ["setEditingColorKey"]),
   },
 };
 </script>

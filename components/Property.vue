@@ -11,15 +11,12 @@
         <span>
           {{ item.value }}
         </span>
-        <v-icon v-if="item.color" @click="changeColor(item.color)"
-          >mdi-palette
-        </v-icon>
         <v-icon v-if="item.data" @click="showData(item.data)"
           >mdi-database-eye
         </v-icon>
         <v-icon
-          v-if="item.settings"
-          @click="showSettings({ id, settings: item.settings })"
+          v-if="item.key === 'settings'"
+          @click="showSettings(id)"
           >mdi-cog
         </v-icon>
       </template>
