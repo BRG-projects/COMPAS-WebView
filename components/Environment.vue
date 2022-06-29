@@ -34,6 +34,7 @@
 
 <script>
 import * as THREE from "three";
+import { mapActions } from "vuex";
 
 export default {
   name: "Environment",
@@ -69,35 +70,7 @@ export default {
     },
 
     viewMode(val) {
-      let initViewProperties = (obj) => {
-        if (obj.material) {
-          if (obj.material._opacity === undefined) {
-            obj.material._opacity = obj.material.opacity;
-          }
-          if (obj.material._transparent === undefined) {
-            obj.material._transparent = obj.material.transparent;
-          }
-        }
-      };
-      three.objectsGroup.traverse((child) => {
-        if (!child.isAttributes || !child.material) return;
-        initViewProperties(child);
-        if (val === "Normal") {
-          child.material.transparent = child.material._transparent;
-          child.material.opacity = child.material._opacity;
-        } else if (val === "Ghosted") {
-          child.material.transparent = true;
-          child.material.opacity = 0.3;
-        } else if (val === "Wireframe") {
-        } else if (val === "NormalWireframe") {
-          child.material.transparent = child.material._transparent;
-          child.material.opacity = child.material._opacity;
-        } else if (val === "GhostedWireframe") {
-          child.material.transparent = true;
-          child.material.opacity = 0.3;
-        }
-      });
-
+      this.enableGhostedView(val === "Ghosted" || val === "GhostedWireframe");
       const attributesVisibilities = {
         Normal: ["faces"],
         Ghosted: ["faces"],
@@ -105,7 +78,7 @@ export default {
         NormalWireframe: ["edges", "faces"],
         GhostedWireframe: ["edges", "faces"],
       };
-      this.$root.$emit("showAttributes", attributesVisibilities[val]);
+      this.showAttributes(attributesVisibilities[val]);
     },
 
     gimbal(val) {
@@ -130,6 +103,7 @@ export default {
   },
 
   methods: {
+    ...mapActions("scene", ["showAttributes", "enableGhostedView"]),
     showHdri() {
       if (this.useHdri) {
         three.scene.background = three.hdri;
