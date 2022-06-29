@@ -204,7 +204,7 @@ export default class Three {
             child.visible = child._visible;
         });
         this.editingObj.children.forEach((child) => {
-            child.selectAttribute(-1);
+            child.selectAttribute(null);
         });
         this.editingObj = null;
         this.mode = "Scene";

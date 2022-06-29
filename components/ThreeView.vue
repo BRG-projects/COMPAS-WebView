@@ -42,10 +42,11 @@ export default {
           console.log("raytrace intersects", intersects);
           let obj = intersects[0].object;
           if (obj.isAttributes) obj = obj.parent;
-          await this.select(obj.id);
+          let id = obj.id;
+          await this.select({ id });
           this.$root.$emit("highlight");
         } else {
-          this.select();
+          this.select({});
         }
       } else if (this.mode === "Attributes") {
         this.three.editingObj.children.forEach((attributeObject) => {
@@ -71,15 +72,19 @@ export default {
                 intersects[0].index !== undefined
                   ? intersects[0].index
                   : intersects[0].faceIndex;
-              let attributeProperties = attributeObject.selectAttribute(index);
 
-              this.showProperties({
-                id: null,
-                properties: attributeProperties || [],
-              });
+              let attributeKey = attributeObject.indexToKey(index);
+              this.select({ attributeKey });
+              // this.$root.$emit("highlight");
+
+              // attributeObject.selectAttribute(key);
+              // this.showProperties({
+              //   id: null,
+              //   properties: attributeProperties || [],
+              // });
             }
           } else {
-            attributeObject.selectAttribute(-1);
+            attributeObject.selectAttribute(null);
           }
         });
       }

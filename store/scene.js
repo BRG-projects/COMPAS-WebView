@@ -43,10 +43,10 @@ export const mutations = {
 
 export const actions = {
 
-    async select({ commit, dispatch, state }, id) {
-        commit('setSelected', id);
+    async select({ commit, dispatch, state }, { id, attributeKey }) {
 
         if (state.mode === "Scene") {
+            commit('setSelected', id);
             let obj = await dispatch("getObject", id);
             three.select(obj);
             let properties = [];
@@ -83,6 +83,27 @@ export const actions = {
             }
 
             await dispatch('property/showProperties', { id, properties }, { root: true })
+        } else {
+
+            if (typeof id === "string") {
+                // When called from tree
+                let attributeMode = id.split(".")[0];
+                if (["vertices", "edges", "faces"].includes(attributeMode)) {
+                    commit('setAttributeMode', attributeMode);
+                    commit('setSelected', id);
+                    attributeKey = id.split(".")[1];
+                }
+            } else {
+                // When called from raytracing
+                commit('setSelected', state.attributeMode + "." + attributeKey);
+            }
+            if (attributeKey) {
+                let attributeObj = await dispatch("getAttributeObject");
+                attributeObj.selectAttribute(attributeKey);
+                let properties = attributeObj.getAttributeProperties(attributeKey);
+                await dispatch('property/showProperties', { properties }, { root: true })
+            }
+
         }
 
     },
@@ -170,6 +191,16 @@ export const actions = {
         return obj;
     },
 
+    getAttributeObject({ state }) {
+        let attributeObj = null;
+        three.editingObj.traverse((child) => {
+            if (child.isAttributes && child.name === state.attributeMode) {
+                attributeObj = child;
+            }
+        });
+        return attributeObj;
+    },
+
     async enableGhostedView(_, ghosted) {
         if (!three) return;
         three.objectsGroup.traverse((obj) => {
@@ -216,7 +247,7 @@ export const actions = {
         })
         three.editingObj.traverse((child) => {
             if (child.selectAttribute)
-                child.selectAttribute(-1);
+                child.selectAttribute(null);
         });
         three.editingObj = null;
         three.select(null);

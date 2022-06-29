@@ -56,7 +56,7 @@
             <span
               class="pointer"
               :ref="`label_${item.id}`"
-              @click="select(item.id)"
+              @click="select({id: item.id})"
             >
               {{ item.name }}
             </span>
