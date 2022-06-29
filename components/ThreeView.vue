@@ -49,6 +49,7 @@ export default {
           this.select({});
         }
       } else if (this.mode === "Attributes") {
+        // TODO: this iterated twice. Not efficient.
         this.three.editingObj.children.forEach((attributeObject) => {
           if (!attributeObject.isAttributes) return;
           if (attributeObject.name === this.attributeMode) {
@@ -75,13 +76,7 @@ export default {
 
               let attributeKey = attributeObject.indexToKey(index);
               this.select({ attributeKey });
-              // this.$root.$emit("highlight");
-
-              // attributeObject.selectAttribute(key);
-              // this.showProperties({
-              //   id: null,
-              //   properties: attributeProperties || [],
-              // });
+              this.$root.$emit("highlight");
             }
           } else {
             attributeObject.selectAttribute(null);

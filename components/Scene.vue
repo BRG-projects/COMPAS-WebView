@@ -56,7 +56,7 @@
             <span
               class="pointer"
               :ref="`label_${item.id}`"
-              @click="select({id: item.id})"
+              @click="select({ id: item.id })"
             >
               {{ item.name }}
             </span>
@@ -177,14 +177,21 @@ export default {
     },
 
     async findPath(id) {
-      let path = [];
-      let obj = await this.getObject(id);
-      while (obj.parent) {
-        path.push(obj.parent.id);
-        obj = obj.parent;
-      }
-      path.pop();
-      return path.reverse();
+      const foundPath = {};
+      let searchPath = (branch, path) => {
+        if (path === undefined) path = [];
+        if (foundPath["found"]) return;
+        path = [...path];
+        if (branch.id === id) foundPath["found"] = path;
+        else if (branch.children) {
+          path.push(branch.id);
+          for (let child of branch.children) {
+            searchPath(child, path);
+          }
+        }
+      };
+      searchPath({ children: this.tree });
+      return foundPath["found"];
     },
 
     async focus(item) {
