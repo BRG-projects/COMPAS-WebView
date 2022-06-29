@@ -1,6 +1,7 @@
 export const state = () => {
     return {
         mode: "Scene",
+        attributeMode: "vertices",
         tree: [],
         selected: null,
         attributesVisibility: {
@@ -12,6 +13,14 @@ export const state = () => {
 }
 
 export const mutations = {
+
+    setMode(state, mode) {
+        state.mode = mode;
+    },
+
+    setAttributeMode(state, mode) {
+        state.attributeMode = mode;
+    },
 
     setTree(state, tree) {
         state.tree = tree
@@ -34,56 +43,58 @@ export const mutations = {
 
 export const actions = {
 
-    async select({ commit, dispatch }, id) {
+    async select({ commit, dispatch, state }, id) {
         commit('setSelected', id);
-        let obj = await dispatch("getObject", id);
-        three.select(obj);
-        let properties = [];
-        if (obj) {
-            properties = [
-                {
-                    key: "name",
-                    value: obj.name,
-                },
-                {
-                    key: "type",
-                    value: obj.type,
-                },
-            ];
-            if (obj.guid) {
-                properties.push({
-                    key: "guid",
-                    value: obj.guid,
-                });
-            }
-            if (obj.settings) {
-                properties.push({
-                    key: "settings",
-                    value: "{...}",
-                });
-            }
-            if (obj.data) {
-                properties.push({
-                    key: "data",
-                    value: "{...}",
-                    data: obj.data,
-                });
-            }
-        }
 
-        await dispatch('property/showProperties', { id, properties }, { root: true })
+        if (state.mode === "Scene") {
+            let obj = await dispatch("getObject", id);
+            three.select(obj);
+            let properties = [];
+            if (obj) {
+                properties = [
+                    {
+                        key: "name",
+                        value: obj.name,
+                    },
+                    {
+                        key: "type",
+                        value: obj.type,
+                    },
+                ];
+                if (obj.guid) {
+                    properties.push({
+                        key: "guid",
+                        value: obj.guid,
+                    });
+                }
+                if (obj.settings) {
+                    properties.push({
+                        key: "settings",
+                        value: "{...}",
+                    });
+                }
+                if (obj.data) {
+                    properties.push({
+                        key: "data",
+                        value: "{...}",
+                        data: obj.data,
+                    });
+                }
+            }
+
+            await dispatch('property/showProperties', { id, properties }, { root: true })
+        }
 
     },
 
-    updateTree({ commit }) {
+    updateTree({ commit, state }) {
         if (!three) return;
         let getChildren = (parent) => {
             return parent.children
-                .filter((child) => child.name !== "Gimbal")
                 .map((child) => {
                     let children = [];
-                    if (three.mode === "Scene") children = getChildren(child);
-                    else if (three.mode === "Attributes" && child.getAttributes)
+                    if (state.mode === "Scene") children = getChildren(child);
+                    else if (state.mode === "Attributes" && child.getAttributes)
                         children = child.getAttributes(child);
                     return {
                         name:
@@ -99,8 +110,8 @@ export const actions = {
                 });
         };
 
-        if (three.mode === "Scene") commit("setTree", getChildren(three.objectsGroup));
-        else if (three.mode === "Attributes") commit("setTree", getChildren(three.editingObj));
+        if (state.mode === "Scene") commit("setTree", getChildren(three.objectsGroup));
+        else if (state.mode === "Attributes") commit("setTree", getChildren(three.editingObj));
     },
 
     async toggleVisibility({ commit, dispatch }, id) {
@@ -177,6 +188,39 @@ export const actions = {
                 obj.material.opacity = obj.material._opacity;
             }
         });
+    },
+
+    async startEditAttributes({ dispatch, commit }, id) {
+        commit("setMode", "Attributes");
+        let obj = await dispatch("getObject", id);
+        three.focus(obj);
+        three.select(null);
+        three.objectsGroup.traverse((child) => {
+            if (child === three.objectsGroup) return;
+            child._visible = child.visible;
+            child.visible = child === obj;
+        });
+        console.log("Editing attributes:", obj);
+        three.editingObj = obj;
+
+
+        await dispatch("updateTree");
+        await dispatch("showAttributes", ["vertices", "edges", "faces"]);
+    },
+
+    async exitEditAttributes({ dispatch, commit }) {
+        commit("setMode", "Scene");
+
+        three.objectsGroup.traverse((child) => {
+            child.visible = child._visible;
+        })
+        three.editingObj.traverse((child) => {
+            if (child.selectAttribute)
+                child.selectAttribute(-1);
+        });
+        three.editingObj = null;
+        three.select(null);
+        await dispatch("updateTree");
     }
 
 }

@@ -71,24 +71,26 @@
             <v-icon v-if="mode === 'Scene'" @click.prevent="focus(item)">
               mdi-crosshairs
             </v-icon>
-            <!-- <v-icon
-              v-if="mode === 'Scene' && getObject(item.id).data"
-              @click="editAttributes(item)"
+            <v-icon
+              v-if="
+                mode === 'Scene' && item.type === 'compas.datastructures/Mesh'
+              "
+              @click="startEditAttributes(item.id)"
             >
               mdi-graph
-            </v-icon> -->
+            </v-icon>
           </template>
         </v-treeview>
       </v-card>
     </v-card>
 
     <div v-if="mode === 'Attributes'">
-      <v-radio-group v-model="attributeMode">
+      <v-radio-group :value="attributeMode" @change="setAttributeMode">
         <v-radio value="vertices" label="vertices"></v-radio>
         <v-radio value="edges" label="edges"></v-radio>
         <v-radio value="faces" label="faces"></v-radio>
       </v-radio-group>
-      <v-btn class="my-2" @click="exitEditAttributes()"
+      <v-btn class="my-2" @click="exitEditAttributes"
         >Exit Edit Attributes</v-btn
       >
     </div>
@@ -100,7 +102,7 @@
 </template>
 
 <script>
-import { mapActions, mapState } from "vuex";
+import { mapActions, mapMutations, mapState } from "vuex";
 import Property from "./Property.vue";
 
 export default {
@@ -111,7 +113,13 @@ export default {
   },
 
   computed: {
-    ...mapState("scene", ["mode", "tree", "selected", "attributesVisibility"]),
+    ...mapState("scene", [
+      "mode",
+      "attributeMode",
+      "tree",
+      "selected",
+      "attributesVisibility",
+    ]),
 
     halfHeight() {
       return (document.body.clientHeight - 48) / 2;
@@ -132,14 +140,7 @@ export default {
         LineSegments: "mdi-vector-line",
         Points: "mdi-square-medium-outline",
       },
-      attributeMode: "vertices",
     };
-  },
-
-  watch: {
-    attributeMode(value) {
-      three.attributeMode = value;
-    },
   },
 
   mounted() {
@@ -155,7 +156,11 @@ export default {
       "toggleAttributesVisibility",
       "getObject",
       "removeObject",
+      "startEditAttributes",
+      "exitEditAttributes",
     ]),
+
+    ...mapMutations("scene", ["setAttributeMode"]),
 
     async highlight() {
       if (this.selected) {
@@ -197,17 +202,6 @@ export default {
             inline: "nearest",
           });
       }, 200);
-    },
-
-    editAttributes(item) {
-      let obj = this.getObject(item.id);
-      three.editAttributes(obj);
-      this.$root.$emit("showAttributes", ["vertices", "edges", "faces"]);
-    },
-
-    exitEditAttributes() {
-      three.exitEditAttributes();
-      this.$root.$emit("showAttributes", ["faces"]);
     },
   },
 };

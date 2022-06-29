@@ -117,6 +117,7 @@ export default {
   },
   methods: {
     ...mapActions("repo", ["getTags", "getFiles", "getFile"]),
+    ...mapActions("scene", ["updateTree"]),
 
     async load() {
       try {
@@ -224,7 +225,7 @@ export default {
         alert(e);
       }
 
-      this.$root.$emit("updateTree");
+      this.updateTree();
       this.fileLoading = false;
     },
 
