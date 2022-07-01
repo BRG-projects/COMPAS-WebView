@@ -48,7 +48,6 @@ export default {
           if (obj.isAttributes) obj = obj.parent;
           let id = obj.id;
           await this.select({ id });
-          this.$root.$emit("highlight");
         } else {
           this.select({});
         }
@@ -67,7 +66,6 @@ export default {
 
           let attributeKey = attributeObj.indexToKey(index);
           this.select({ attributeKey });
-          this.$root.$emit("highlight");
         } else {
           this.select({});
         }

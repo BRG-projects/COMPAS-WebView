@@ -102,7 +102,7 @@
 </template>
 
 <script>
-import { mapActions, mapMutations, mapState } from "vuex";
+import { mapActions, mapState } from "vuex";
 import Property from "./Property.vue";
 
 export default {
@@ -126,6 +126,12 @@ export default {
     },
   },
 
+  watch:{
+    selected(){
+      this.highlight();
+    }
+  },
+
   data() {
     return {
       opened: [],
@@ -145,7 +151,6 @@ export default {
 
   mounted() {
     this.updateTree();
-    this.$root.$on("highlight", this.highlight);
   },
 
   methods: {

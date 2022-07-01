@@ -106,8 +106,10 @@ export const actions = {
                     attributeKey = id.split(".")[1];
                 }
             } else {
-                // When called from raytracing
-                commit('setSelected', state.attributeMode + "." + attributeKey);
+                if (attributeKey !== undefined && attributeKey !== null)
+                    commit('setSelected', state.attributeMode + "." + attributeKey);
+                else
+                    commit('setSelected', null);
             }
 
             let attributeObj = await dispatch("getActiveAttributeObj")
@@ -254,6 +256,7 @@ export const actions = {
         commit("setMode", "Scene");
         commit("setEditingObj", null);
         await dispatch("updateTree");
+        await dispatch("showAttributes", ["faces"]);
     },
 
     async switchAttributeMode({ commit, dispatch, state }, mode) {
