@@ -52,7 +52,6 @@ export default class Three {
         this.pointer = new THREE.Vector2();
         this.raycaster = new THREE.Raycaster();
         this.enableTransformControls = false;
-        this.editingObj = null;
     }
 
     setup(refs) {
@@ -185,31 +184,6 @@ export default class Three {
         three.camera.updateProjectionMatrix();
     }
 
-    editAttributes(obj) {
-        this.select(null);
-        this.objectsGroup.children.forEach((child) => {
-            child._visible = child.visible;
-            child.visible = false;
-        });
-        console.log("Editing attributes:", obj);
-        obj.visible = true;
-        this.editingObj = obj;
-        obj.children.forEach((child) => (child.visible = true));
-        this.mode = "Attributes";
-        this.focus(obj);
-    }
-
-    exitEditAttributes() {
-        this.objectsGroup.children.forEach((child) => {
-            child.visible = child._visible;
-        });
-        this.editingObj.children.forEach((child) => {
-            child.selectAttribute(null);
-        });
-        this.editingObj = null;
-        this.mode = "Scene";
-    }
-
     adaptAttributesColorToTheme(isDark) {
         this.objectsGroup.traverse((obj) => {
             if (
@@ -221,13 +195,4 @@ export default class Three {
         });
     }
 
-    getObjectById(id) {
-        let obj;
-        this.objectsGroup.traverse((_obj) => {
-            if (_obj.id === id) {
-                obj = _obj;
-            }
-        });
-        return obj;
-    }
 }

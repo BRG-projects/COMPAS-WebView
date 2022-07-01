@@ -23,7 +23,11 @@ export default {
   },
 
   methods: {
-    ...mapActions("scene", ["select"]),
+    ...mapActions("scene", [
+      "select",
+      "getActiveAttributeObj",
+      "getEditingObj",
+    ]),
     ...mapActions("property", ["showProperties"]),
     onMouseMove(event) {
       this.three.pointer.x = (event.offsetX / event.target.width) * 2 - 1;
@@ -49,39 +53,24 @@ export default {
           this.select({});
         }
       } else if (this.mode === "Attributes") {
-        // TODO: this iterated twice. Not efficient.
-        this.three.editingObj.children.forEach((attributeObject) => {
-          if (!attributeObject.isAttributes) return;
-          if (attributeObject.name === this.attributeMode) {
-            this.three.raycaster.params.Points.threshold =
-              this.three.raycaster.params.Line.threshold =
-                this.three.editingObj.raycastThreshold;
-            let intersects =
-              this.three.raycaster.intersectObject(attributeObject);
-            if (intersects.length) {
-              // intersects.forEach((intersect) => {
-              //   const geometry = new THREE.SphereGeometry(0.01);
-              //   const material = new THREE.MeshBasicMaterial({
-              //     color: 0xffff00,
-              //   });
-              //   const sphere = new THREE.Mesh(geometry, material);
-              //   sphere.position.copy(intersect.point);
-              //   this.three.editingObj.add(sphere);
-              // });
+        let editingObj = await this.getEditingObj();
+        this.three.raycaster.params.Points.threshold =
+          this.three.raycaster.params.Line.threshold =
+            editingObj.raycastThreshold;
+        let attributeObj = await this.getActiveAttributeObj();
+        let intersects = this.three.raycaster.intersectObject(attributeObj);
+        if (intersects.length) {
+          let index =
+            intersects[0].index !== undefined
+              ? intersects[0].index
+              : intersects[0].faceIndex;
 
-              let index =
-                intersects[0].index !== undefined
-                  ? intersects[0].index
-                  : intersects[0].faceIndex;
-
-              let attributeKey = attributeObject.indexToKey(index);
-              this.select({ attributeKey });
-              this.$root.$emit("highlight");
-            }
-          } else {
-            attributeObject.selectAttribute(null);
-          }
-        });
+          let attributeKey = attributeObj.indexToKey(index);
+          this.select({ attributeKey });
+          this.$root.$emit("highlight");
+        } else {
+          this.select({});
+        }
       }
     },
   },

@@ -85,7 +85,7 @@
     </v-card>
 
     <div v-if="mode === 'Attributes'">
-      <v-radio-group :value="attributeMode" @change="setAttributeMode">
+      <v-radio-group :value="attributeMode" @change="switchAttributeMode">
         <v-radio value="vertices" label="vertices"></v-radio>
         <v-radio value="edges" label="edges"></v-radio>
         <v-radio value="faces" label="faces"></v-radio>
@@ -158,9 +158,8 @@ export default {
       "removeObject",
       "startEditAttributes",
       "exitEditAttributes",
+      "switchAttributeMode"
     ]),
-
-    ...mapMutations("scene", ["setAttributeMode"]),
 
     async highlight() {
       if (this.selected) {
