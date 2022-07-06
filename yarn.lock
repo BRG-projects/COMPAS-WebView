@@ -1960,6 +1960,11 @@ aggregate-error@^3.0.0, aggregate-error@^3.1.0:
     clean-stack "^2.0.0"
     indent-string "^4.0.0"
 
+aggregation@^1.2.7:
+  version "1.2.7"
+  resolved "https://registry.yarnpkg.com/aggregation/-/aggregation-1.2.7.tgz#7a71410891b91d476229cd9226304ebbfbb20626"
+  integrity sha512-srZKi3tJbkdOeCtGBG7o6+qtRZ//ksJhlt9rtFipWdt/VohD6KJ954Qi99GG1c4PHu4yjPktQyP+vjgXOF6eUw==
+
 ajv-errors@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/ajv-errors/-/ajv-errors-1.0.1.tgz#f35986aceb91afadec4102fbd85014950cefa64d"
