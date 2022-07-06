@@ -45,15 +45,11 @@ export default class VerticesView extends aggregation(THREE.Points, AttributesVi
 
         super(pointsGeometry, pointsMaterial);
 
-        this.data = data;
-        this.settings = settings;
+        this.init(data, settings);
         this.vertexIndexMapping = vertexIndexMapping;
         this.vertexKeyMapping = vertexKeyMapping;
         this.colorPoints = colorPoints;
-
         this.name = "vertices";
-        this.isAttributes = true;
-        this.lastSelected = null;
         this.visible = false;
 
     }
@@ -75,9 +71,17 @@ export default class VerticesView extends aggregation(THREE.Points, AttributesVi
         this.geometry.attributes.selected.needsUpdate = true;
     }
 
+    invertColor(isDark) {
+        if (this.colorPoints.getHex() === 0xffffff && !isDark) {
+            this.colorPoints.set(0x000000);
+        } else if (this.colorPoints.getHex() === 0x000000 && isDark) {
+            this.colorPoints.set(0xffffff);
+        }
+        this.geometry.attributes.selected.needsUpdate = true;
+    }
+
     indexToKey(index) {
         // Get attribute key from triangle index
-        console.log(index, this.vertexIndexMapping)
         return this.vertexIndexMapping[index];
     }
 

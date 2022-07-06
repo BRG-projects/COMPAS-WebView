@@ -115,16 +115,11 @@ export default class FacesView extends aggregation(THREE.Mesh, AttributesView) {
         const material = new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, color: 0xffffff, flatShading: false, vertexColors: true });
 
         super(geometry, material);
-
-        this.data = data;
-        this.settings = settings;
+        this.init(data, settings);
         this.triangleFaceMapping = triangleFaceMapping;
         this.compasFaceMapping = compasFaceMapping;
         this.colorFaces = colorFaces;
-
         this.name = "faces";
-        this.isAttributes = true;
-        this.lastSelected = null;
 
     }
 

@@ -201,6 +201,7 @@ export default {
           case "json":
             console.log("json", content);
             loadCOMPAS(content);
+            three.adaptAttributesColorToTheme(this.$vuetify.theme.dark);
             // if (Array.isArray(content)) {
             //   content.forEach(function (obj) {
             //     let mesh = compasToThree(obj.data, obj.settings);
