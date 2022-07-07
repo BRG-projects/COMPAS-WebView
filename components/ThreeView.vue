@@ -57,12 +57,15 @@ export default {
           this.three.raycaster.params.Line.threshold =
             editingObj.raycastThreshold;
         let attributeObj = await this.getActiveAttributeObj();
+        console.log(attributeObj)
         let intersects = this.three.raycaster.intersectObject(attributeObj);
         if (intersects.length) {
           let index =
             intersects[0].index !== undefined
               ? intersects[0].index
               : intersects[0].faceIndex;
+            
+          console.log("sdafasfsafd")
 
           let attributeKey = attributeObj.indexToKey(index);
           this.select({ attributeKey });

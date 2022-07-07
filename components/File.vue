@@ -83,8 +83,9 @@
 <script>
 import { mapState, mapActions } from "vuex";
 import { AnimationMixer, Mesh, EdgesGeometry, LineSegments } from "three";
-import autoCreaseDetect from "./convert";
-import compasToThree from "./compas";
+// import autoCreaseDetect from "./convert";
+// import compasToThree from "./compas";
+import loadCOMPAS from "../compas/loader";
 import axios from "axios";
 
 export default {
@@ -199,19 +200,20 @@ export default {
 
           case "json":
             console.log("json", content);
-            if (Array.isArray(content)) {
-              content.forEach(function (obj) {
-                let mesh = compasToThree(obj.data, obj.settings);
-                three.objectsGroup.add(mesh);
-              });
-              three.adaptAttributesColorToTheme(this.$vuetify.theme.dark);
-            } else {
-              let obj = compasToThree(content);
-              if (obj) {
-                three.objectsGroup.add(obj);
-              }
-            }
-
+            loadCOMPAS(content);
+            three.adaptAttributesColorToTheme(this.$vuetify.theme.dark);
+            // if (Array.isArray(content)) {
+            //   content.forEach(function (obj) {
+            //     let mesh = compasToThree(obj.data, obj.settings);
+            //     three.objectsGroup.add(mesh);
+            //   });
+            //   three.adaptAttributesColorToTheme(this.$vuetify.theme.dark);
+            // } else {
+            //   let obj = compasToThree(content);
+            //   if (obj) {
+            //     three.objectsGroup.add(obj);
+            //   }
+            // }
             break;
 
           default:
